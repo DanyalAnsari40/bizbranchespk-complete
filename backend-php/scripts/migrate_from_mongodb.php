@@ -184,6 +184,9 @@ function runMongoMigration(): array {
                         $lat = (float)$biz['location']['coordinates'][1];
                     }
 
+                    $rawApprovedBy = $biz['approvedBy'] ?? null;
+                    $approvedByVal = in_array($rawApprovedBy, ['auto', 'admin'], true) ? $rawApprovedBy : 'auto';
+
                     $stmt->execute([
                         mb_substr($biz['name'] ?? '', 0, 255),
                         $slug,
@@ -213,9 +216,9 @@ function runMongoMigration(): array {
                         $biz['iban'] ?? null,
                         $biz['logoUrl'] ?? null,
                         $biz['logoPublicId'] ?? null,
-                        $biz['status'] ?? 'approved',
-                        $approvedAt,
-                        $biz['approvedBy'] ?? null,
+                        'approved',
+                        $approvedAt ?: date('Y-m-d H:i:s'),
+                        $approvedByVal,
                         (int)($biz['featured'] ?? 0),
                         $featuredAt,
                         (float)($biz['ratingAvg'] ?? 0),

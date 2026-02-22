@@ -67,6 +67,87 @@ function registerAdminRoutes(Router $router): void {
         ]);
     });
 
+    // GET /api/admin/business-status — diagnose status distribution; POST to fix
+    $router->get('/api/admin/business-status', function($params) {
+        $adminSecret = env('ADMIN_SECRET');
+        if (!$adminSecret) Response::error('Missing ADMIN_SECRET', 500);
+
+        $bearer = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $headerSecret = $_SERVER['HTTP_X_ADMIN_SECRET'] ?? '';
+        if (!$headerSecret && str_starts_with($bearer, 'Bearer ')) $headerSecret = substr($bearer, 7);
+        if ($headerSecret !== $adminSecret) Response::error('Unauthorized', 401);
+
+        try {
+            $pdo = db();
+
+            $statusDist = $pdo->query("SELECT status, COUNT(*) as cnt FROM businesses GROUP BY status")->fetchAll();
+            $approvedByDist = $pdo->query("SELECT approved_by, COUNT(*) as cnt FROM businesses GROUP BY approved_by")->fetchAll();
+            $total = (int)$pdo->query("SELECT COUNT(*) FROM businesses")->fetchColumn();
+            $approvedCount = (int)$pdo->query("SELECT COUNT(*) FROM businesses WHERE status = 'approved'")->fetchColumn();
+            $notApproved = $total - $approvedCount;
+
+            $sample = [];
+            if ($notApproved > 0) {
+                $stmt = $pdo->query("SELECT id, name, slug, status, approved_by FROM businesses WHERE status != 'approved' LIMIT 20");
+                $sample = $stmt->fetchAll();
+            }
+
+            Response::success([
+                'total_businesses' => $total,
+                'approved' => $approvedCount,
+                'not_approved' => $notApproved,
+                'status_distribution' => $statusDist,
+                'approved_by_distribution' => $approvedByDist,
+                'sample_not_approved' => $sample,
+                'fix_hint' => $notApproved > 0
+                    ? "POST /api/admin/business-status with {\"action\":\"approve-all\"} to set all businesses to status='approved'"
+                    : 'All businesses are already approved.',
+            ]);
+        } catch (Exception $e) {
+            Logger::error('Error in business-status diagnostic:', $e->getMessage());
+            Response::error('Diagnostic failed: ' . $e->getMessage(), 500);
+        }
+    });
+
+    $router->post('/api/admin/business-status', function($params) {
+        $adminSecret = env('ADMIN_SECRET');
+        if (!$adminSecret) Response::error('Missing ADMIN_SECRET', 500);
+
+        $bearer = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $headerSecret = $_SERVER['HTTP_X_ADMIN_SECRET'] ?? '';
+        if (!$headerSecret && str_starts_with($bearer, 'Bearer ')) $headerSecret = substr($bearer, 7);
+        if ($headerSecret !== $adminSecret) Response::error('Unauthorized', 401);
+
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $action = $body['action'] ?? '';
+
+        if ($action !== 'approve-all') {
+            Response::error('Send {"action":"approve-all"} to approve all businesses', 400);
+        }
+
+        try {
+            $pdo = db();
+            $before = (int)$pdo->query("SELECT COUNT(*) FROM businesses WHERE status != 'approved'")->fetchColumn();
+
+            $pdo->exec("UPDATE businesses SET status = 'approved', approved_at = COALESCE(approved_at, NOW()), approved_by = COALESCE(NULLIF(approved_by, ''), 'auto') WHERE status != 'approved' OR status IS NULL OR status = ''");
+
+            $after = (int)$pdo->query("SELECT COUNT(*) FROM businesses WHERE status != 'approved'")->fetchColumn();
+
+            $pdo->exec("UPDATE categories c SET c.count = (SELECT COUNT(*) FROM businesses b WHERE LOWER(b.category) = LOWER(c.name) AND b.status = 'approved')");
+
+            Response::success([
+                'fixed' => $before - $after,
+                'remaining_not_approved' => $after,
+                'message' => ($before - $after) > 0
+                    ? "Fixed {$before} businesses. All are now approved and visible on the website."
+                    : 'All businesses were already approved.',
+            ]);
+        } catch (Exception $e) {
+            Logger::error('Error fixing business statuses:', $e->getMessage());
+            Response::error('Fix failed: ' . $e->getMessage(), 500);
+        }
+    });
+
     $router->get('/api/admin/submissions', function($params) {
         $adminSecret = env('ADMIN_SECRET');
         if (!$adminSecret) Response::error('Missing ADMIN_SECRET', 500);
@@ -88,6 +169,11 @@ function registerAdminRoutes(Router $router): void {
 
             $where = "approved_by = 'auto'";
             $bindParams = [];
+
+            if (!empty($_GET['status'])) {
+                $where .= " AND status = ?";
+                $bindParams[] = $_GET['status'];
+            }
 
             if (!empty($_GET['from'])) {
                 $where .= " AND created_at >= ?";
