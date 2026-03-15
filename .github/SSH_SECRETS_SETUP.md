@@ -29,3 +29,14 @@ The workflow fails with **"SSH deploy required"** when these repository secrets 
 - You must be in **Repository secrets**, not **Environment secrets**.
 - Names are case-sensitive: `SSH_HOST` not `ssh_host` or `SSH Host`.
 - No extra spaces in the secret **name** (the value can be multi-line for the key).
+
+## "Connection refused" – what to try
+
+1. **Use the server hostname for `SSH_HOST`**  
+   Many hosts require the **server hostname** (e.g. `server123.hosting.com` or `box456.example.com`), not your domain `bizbranches.pk`. In cPanel check the address shown for SSH/SFTP (often under **SSH Access** or **FTP Accounts** / connection info). Use that host in the `SSH_HOST` secret.
+
+2. **Confirm the port**  
+   In the workflow log you’ll see: `host length=X chars, port length=Y chars`. Port length 2 → port is `22`; 5 → `21098`. In cPanel → **Security** → **SSH Access** confirm the port and set `SSH_PORT` to that exact number (no spaces).
+
+3. **Firewall / IP blocking**  
+   If host and port are correct and you still get “Connection refused”, your host may be blocking SSH from GitHub’s IPs. Ask your host to allow **outbound SSH from GitHub Actions** (or whitelist the region). No FTP fallback – deploy is SSH-only.

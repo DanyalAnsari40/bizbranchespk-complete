@@ -1,7 +1,6 @@
-# Deploy to cPanel via SSH + rsync (port 22 by default).
+# Deploy to cPanel via SSH + rsync only.
 # Required secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY.
 # Optional: SSH_PORT (default 22), SSH_REMOTE_WEB_ROOT, SSH_REMOTE_API_PATH.
-# Enable SSH in cPanel and add the public key; rsync only sends changed files.
 
 name: Deploy to cPanel
 
@@ -86,10 +85,10 @@ jobs:
       github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'backend' || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == '') ||
       github.event_name != 'workflow_dispatch'
     steps:
-      - name: Require SSH for deploy (FTP removed to surface real errors)
+      - name: Require SSH (deploy is SSH-only)
         if: needs.check-deploy-method.outputs.use_ssh != 'true'
         run: |
-          echo "::error::SSH deploy required. Add repo secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY (optional: SSH_PORT, SSH_REMOTE_WEB_ROOT, SSH_REMOTE_API_PATH)"
+          echo "::error::SSH required. Add repo secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY (optional: SSH_PORT, SSH_REMOTE_WEB_ROOT, SSH_REMOTE_API_PATH)"
           exit 1
 
       - name: Checkout code
@@ -120,6 +119,7 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           REMOTE_API: ${{ secrets.SSH_REMOTE_API_PATH || 'public_html/api' }}
         run: |
+          echo "SSH target: host length=${#SSH_HOST} chars, port length=${#SSH_PORT} chars (e.g. 2=22, 5=21098)"
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
@@ -139,10 +139,10 @@ jobs:
       github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'frontend' || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == '') ||
       github.event_name != 'workflow_dispatch'
     steps:
-      - name: Require SSH for deploy (FTP removed to surface real errors)
+      - name: Require SSH (deploy is SSH-only)
         if: needs.check-deploy-method.outputs.use_ssh != 'true'
         run: |
-          echo "::error::SSH deploy required. Add repo secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY (optional: SSH_PORT, SSH_REMOTE_WEB_ROOT)"
+          echo "::error::SSH required. Add repo secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY (optional: SSH_PORT, SSH_REMOTE_WEB_ROOT)"
           exit 1
 
       - name: Checkout code
@@ -213,6 +213,7 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           REMOTE_WEB: ${{ secrets.SSH_REMOTE_WEB_ROOT || 'public_html' }}
         run: |
+          echo "SSH target: host length=${#SSH_HOST} chars, port length=${#SSH_PORT} chars (e.g. 2=22, 5=21098)"
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
