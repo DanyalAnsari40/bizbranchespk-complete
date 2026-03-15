@@ -1,6 +1,7 @@
 # Add SSH secrets so deploy can use rsync
 
-The workflow fails with **"SSH deploy required"** when these repository secrets are missing.
+The workflow fails with **"SSH deploy required"** when these repository secrets are missing.  
+**SSH port:** Default is 22. Many cPanel hosts use a **custom port** (e.g. 21098). Check cPanel → Security → SSH Access for the port; if it’s not 22, add secret `SSH_PORT` with that value (e.g. `21098`). "Connection refused" often means the wrong port.
 
 ## Steps (exact names – case-sensitive)
 
@@ -17,7 +18,7 @@ The workflow fails with **"SSH deploy required"** when these repository secrets 
 
 | Secret name              | Example value   |
 |--------------------------|-----------------|
-| `SSH_PORT`               | `21098` (if not 22) |
+| `SSH_PORT`               | Port from cPanel → SSH Access (e.g. `21098`). Omit = 22. If you get "Connection refused", set this. |
 | `SSH_REMOTE_WEB_ROOT`    | `public_html`   |
 | `SSH_REMOTE_API_PATH`    | `public_html/api` |
 
