@@ -71,8 +71,15 @@ jobs:
     needs: [detect-changes, check-deploy-method]
     if: |
       github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'backend' || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == '') ||
-      github.event_name != 'workflow_dispatch' && (needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.config == 'true')
+      github.event_name != 'workflow_dispatch'
     steps:
+      - name: Deploy method (backend)
+        run: |
+          if [ "${{ needs.check-deploy-method.outputs.use_ssh }}" = "true" ]; then
+            echo "✅ Using SSH + rsync (only changed files will be uploaded)"
+          else
+            echo "⚠️ Using FTP – uploads can be slow (add SSH secrets for fast rsync)"
+          fi
       - name: Check FTP secrets (when not using SSH)
         if: needs.check-deploy-method.outputs.use_ssh != 'true'
         env:
@@ -152,8 +159,15 @@ jobs:
     needs: [detect-changes, check-deploy-method]
     if: |
       github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'frontend' || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == '') ||
-      github.event_name != 'workflow_dispatch' && (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.config == 'true')
+      github.event_name != 'workflow_dispatch'
     steps:
+      - name: Deploy method (frontend)
+        run: |
+          if [ "${{ needs.check-deploy-method.outputs.use_ssh }}" = "true" ]; then
+            echo "✅ Using SSH + rsync (only changed files will be uploaded)"
+          else
+            echo "⚠️ Using FTP – uploads can be slow (add SSH secrets for fast rsync)"
+          fi
       - name: Check FTP secrets (when not using SSH)
         if: needs.check-deploy-method.outputs.use_ssh != 'true'
         env:
