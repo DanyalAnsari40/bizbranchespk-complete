@@ -59,6 +59,17 @@ jobs:
     outputs:
       use_ssh: ${{ steps.method.outputs.use_ssh }}
     steps:
+      - name: Check SSH secret
+        run: |
+          if [ -n "$SSH_HOST" ]; then
+            echo "✅ SSH_HOST is set → will use rsync (fast)"
+          else
+            echo "❌ SSH_HOST is NOT set → will use FTP (slow)"
+            echo "Add secret: Repo → Settings → Secrets and variables → Actions → New repository secret"
+            echo "Name: SSH_HOST   Value: your server hostname (e.g. bizbranches.pk)"
+          fi
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
       - id: method
         run: |
           if [ -n "$SSH_HOST" ]; then echo "use_ssh=true"; else echo "use_ssh=false"; fi >> $GITHUB_OUTPUT
