@@ -1,5 +1,4 @@
--- Fix columns for MongoDB import compatibility
--- Run this if tables already exist from 001_create_tables.sql
+-- Optional schema fixes (run if tables already exist from 001_create_tables.sql)
 
 -- categories.image_url was VARCHAR(500) but MongoDB exports can have base64 data URLs (1M+ chars)
 ALTER TABLE categories MODIFY COLUMN image_url LONGTEXT DEFAULT NULL;
@@ -16,6 +15,6 @@ ALTER TABLE businesses MODIFY COLUMN phone VARCHAR(50) NOT NULL;
 -- businesses.iban can contain URLs in some records
 ALTER TABLE businesses MODIFY COLUMN iban VARCHAR(500) DEFAULT NULL;
 
--- Add mongo_id to reviews for deduplication during re-imports
-ALTER TABLE reviews ADD COLUMN IF NOT EXISTS mongo_id VARCHAR(30) DEFAULT NULL;
-ALTER TABLE reviews ADD UNIQUE INDEX IF NOT EXISTS uk_mongo_id (mongo_id);
+-- Optional: review source id for deduplication
+-- ALTER TABLE reviews ADD COLUMN IF NOT EXISTS mongo_id VARCHAR(30) DEFAULT NULL;
+-- ALTER TABLE reviews ADD UNIQUE INDEX IF NOT EXISTS uk_mongo_id (mongo_id);

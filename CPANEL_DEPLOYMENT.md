@@ -20,7 +20,6 @@ public_html/
 ├── _next/             ← JS/CSS bundles
 ├── category/          ← Category pages (static)
 ├── city/              ← City pages (static)
-├── admin/             ← Admin import page (static)
 ├── *.html             ← Other static pages
 ├── public/            ← Images, manifest, robots.txt (if copied)
 └── api/               ← PHP backend (deployed by CI/CD)
@@ -107,19 +106,9 @@ Or trigger manually: **GitHub > Actions > Run workflow**
 
 ---
 
-## Step 4: Import MongoDB Data
+## Step 4: Data
 
-**Option A – From the frontend (recommended)**  
-1. Ensure tables exist (Step 1.1 – import the SQL in phpMyAdmin).  
-2. Visit: `https://bizbranches.pk/admin/import`  
-3. Enter your **Admin secret** (same as `ADMIN_SECRET` in `api/.env`).  
-4. Upload one or more JSON files (categories, cities, businesses, reviews, users).  
-5. Click **Start import**. The page will show how many rows were imported.
-
-**Option B – From the server**  
-1. Visit: `https://bizbranches.pk/api/run-migration.php?secret=YOUR_ADMIN_SECRET`  
-2. Wait for it to finish.  
-3. **Delete** `run-migration.php` from the server via File Manager after use.
+If migrating from another source, import data directly into MySQL via phpMyAdmin (SQL import, CSV, or custom scripts). The database schema is in `backend-php/migrations/001_create_tables.sql`.
 
 ---
 

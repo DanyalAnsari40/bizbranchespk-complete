@@ -31,7 +31,6 @@ function isProd(): bool {
     return env('NODE_ENV', '') === 'production' || env('APP_ENV', '') === 'production';
 }
 
-// Load .env files (checks multiple locations for flexibility)
-loadEnv(__DIR__ . '/../.env');          // api/.env (cPanel production)
-loadEnv(__DIR__ . '/../../.env');       // root .env (dev)
-loadEnv(__DIR__ . '/../../backend/.env'); // backend/.env (Node.js dev)
+// Load .env (api/.env on cPanel, or root .env for local dev)
+loadEnv(__DIR__ . '/../.env');
+loadEnv(__DIR__ . '/../../.env');

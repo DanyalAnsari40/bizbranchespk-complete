@@ -1,147 +1,78 @@
 # BizBranches PHP Backend
 
-PHP + MySQL replacement for the original Node.js/Express/MongoDB backend.
+PHP + MySQL API for the BizBranches directory. Serves `/api/*` for the Next.js frontend.
 
 ## Prerequisites
 
 - PHP 8.1+
 - MySQL 8.0+
-- Composer (PHP package manager)
+- Composer
 
 ## Setup
 
-### 1. Install Dependencies
+### 1. Install dependencies
 
 ```bash
 cd backend-php
 composer install
 ```
 
-### 2. Configure Environment
+### 2. Environment
 
 ```bash
 cp .env.example .env
-# Edit .env with your MySQL credentials and other settings
+# Edit .env: DB_HOST, DB_NAME, DB_USER, DB_PASS, CLOUDINARY_*, SMTP_*, etc.
 ```
 
-### 3. Create Database & Run Migrations
+### 3. Database
 
-```sql
-CREATE DATABASE bizbranches CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-Then run the migration SQL:
+Create the database, then run:
 
 ```bash
-mysql -u root -p bizbranches < migrations/001_create_tables.sql
+mysql -u root -p your_db_name < migrations/001_create_tables.sql
 ```
 
-### 4. Migrate Data from MongoDB (if applicable)
-
-Export your MongoDB collections to JSON files:
+Optional (if you already have tables from an older run):
 
 ```bash
-mongoexport --uri="YOUR_MONGODB_URI" --db=BizBranches --collection=businesses --out=scripts/businesses.json --jsonArray
-mongoexport --uri="YOUR_MONGODB_URI" --db=BizBranches --collection=categories --out=scripts/categories.json --jsonArray
-mongoexport --uri="YOUR_MONGODB_URI" --db=BizBranches --collection=cities --out=scripts/cities.json --jsonArray
-mongoexport --uri="YOUR_MONGODB_URI" --db=BizBranches --collection=reviews --out=scripts/reviews.json --jsonArray
+mysql -u root -p your_db_name < migrations/002_fix_import_columns.sql
 ```
 
-Then run the migration script:
-
-```bash
-php scripts/migrate_from_mongodb.php
-```
-
-### 5. Start the Server
-
-Development (standalone):
+### 4. Run locally
 
 ```bash
 php -S 0.0.0.0:3002 index.php
 ```
 
-With the frontend (from project root):
+Or from project root: `npm run dev` (starts PHP + Next.js).
 
-```bash
-npm run dev:php
-```
-
-Production (from project root):
-
-```bash
-npm run start:php
-```
-
-## API Endpoints
-
-All endpoints mirror the original Node.js backend API exactly.
+## API (main)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/ping` | Health check |
-| GET | `/api/db-health` | Database connection check |
-| GET | `/api/businesses` | List businesses (paginated, filtered) |
-| GET | `/api/business/:slug` | Get business by slug |
-| POST | `/api/businesses` | Create new business |
-| POST | `/api/business/duplicate-check` | Check for duplicates |
-| GET | `/api/categories` | List categories |
-| GET | `/api/category/:slug` | Get category by slug |
-| GET | `/api/search` | Autocomplete search |
-| GET | `/api/cities` | List cities |
-| GET | `/api/countries` | List countries |
-| GET | `/api/reviews/:id` | Get reviews for business |
-| POST | `/api/reviews` | Submit a review |
-| GET | `/api/provinces` | List provinces |
-| GET | `/api/areas` | List areas by city |
-| GET | `/api/geocode` | Geocode an address |
-| GET | `/api/business/related` | Related businesses |
-| GET | `/api/admin/submissions` | Admin submissions list |
+| GET | `/api/db-health` | DB check |
+| GET | `/api/business` | List businesses (paginated, filtered) |
+| GET | `/api/business/:slug` | Business by slug or id |
+| POST | `/api/business` | Create business |
+| GET | `/api/categories` | Categories |
+| GET | `/api/cities` | Cities |
+| GET | `/api/search` | Autocomplete |
+| GET | `/api/reviews` | Reviews for business |
+| POST | `/api/reviews` | Submit review |
+| GET | `/api/sitemap/businesses` | Sitemap data |
+| GET | `/api/sitemap/geo-pages` | City/category/area combos |
 
-## Project Structure
+## Structure
 
 ```
 backend-php/
-├── config/
-│   ├── config.php          # Environment & helpers
-│   └── database.php        # PDO MySQL connection
-├── lib/
-│   ├── CloudinaryHelper.php
-│   ├── Courier.php
-│   ├── DuplicateCheck.php
-│   ├── Email.php
-│   ├── Geo.php
-│   ├── Geocode.php
-│   ├── GooglePing.php
-│   ├── Logger.php
-│   ├── RateLimit.php
-│   ├── Response.php
-│   ├── Router.php
-│   ├── Sanitize.php
-│   └── Validator.php
-├── routes/
-│   ├── admin.php
-│   ├── areas.php
-│   ├── business.php
-│   ├── business_related.php
-│   ├── categories.php
-│   ├── cities.php
-│   ├── db_health.php
-│   ├── debug.php
-│   ├── geocode.php
-│   ├── profile.php
-│   ├── provinces.php
-│   ├── reviews.php
-│   ├── search.php
-│   └── sitemap_api.php
-├── migrations/
-│   └── 001_create_tables.sql
-├── scripts/
-│   └── migrate_from_mongodb.php
-├── data/
-│   └── pakistan-cities.json
-├── index.php               # Entry point
-├── composer.json
-├── .env.example
-└── .gitignore
+├── config/       # config.php, database.php
+├── lib/          # Helpers (Router, Response, Cloudinary, etc.)
+├── routes/       # API route handlers
+├── migrations/   # SQL schema
+├── data/         # pakistan-cities.json
+├── scripts/      # (optional uploads; not in repo)
+├── index.php
+└── composer.json
 ```

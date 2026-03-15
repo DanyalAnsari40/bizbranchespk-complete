@@ -22,7 +22,7 @@ export function GlobalTopbar() {
     const isSingleSegment = /^\/[^/]+\/?$/.test(pathname)
     if (isSingleSegment) {
       // Do NOT include "/" here; homepage is handled above. This ensures "/:slug" is treated as business detail.
-      const topLevel = ["/add", "/search", "/city", "/category", "/admin"]
+      const topLevel = ["/add", "/search", "/city", "/category"]
       const isKnownTopLevel = topLevel.some((p) => pathname.startsWith(p))
       if (!isKnownTopLevel) return true
     }
