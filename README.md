@@ -6,7 +6,7 @@ Pakistan business directory: Next.js static frontend + PHP API + MySQL.
 
 - **Frontend:** Next.js 15 (static export), React, Tailwind, shadcn/ui
 - **Backend:** PHP 8.2, MySQL
-- **Deploy:** GitHub Actions → cPanel (SSH/rsync or FTP)
+- **Deploy:** GitHub Actions → cPanel (SSH/rsync or FTP). Use SSH secrets for fast rsync deploy.
 
 ## Quick start
 
