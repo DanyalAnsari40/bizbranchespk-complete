@@ -86,13 +86,13 @@ jobs:
     steps:
       - name: Deploy method (backend)
         run: |
-          if [ "${{ needs.check-deploy-method.outputs.use_ssh }}" = "true" ]; then
-            echo "✅ Using SSH + rsync (only changed files will be uploaded)"
+          if [ -n "${{ secrets.SSH_HOST }}" ]; then
+            echo "✅ SSH_HOST is set → will run rsync step"
           else
-            echo "⚠️ Using FTP – uploads can be slow (add SSH secrets for fast rsync)"
+            echo "⚠️ SSH_HOST secret is empty or missing → will run FTP step (add SSH_HOST in Settings → Secrets)"
           fi
       - name: Check FTP secrets (when not using SSH)
-        if: needs.check-deploy-method.outputs.use_ssh != 'true'
+        if: ${{ secrets.SSH_HOST == '' }}
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -125,7 +125,7 @@ jobs:
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
       - name: Deploy backend via rsync (fast)
-        if: needs.check-deploy-method.outputs.use_ssh == 'true'
+        if: ${{ secrets.SSH_HOST != '' }}
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
@@ -145,7 +145,7 @@ jobs:
           rm -f ~/.ssh/deploy_key
 
       - name: Deploy backend via FTP
-        if: needs.check-deploy-method.outputs.use_ssh != 'true'
+        if: ${{ secrets.SSH_HOST == '' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -174,13 +174,13 @@ jobs:
     steps:
       - name: Deploy method (frontend)
         run: |
-          if [ "${{ needs.check-deploy-method.outputs.use_ssh }}" = "true" ]; then
-            echo "✅ Using SSH + rsync (only changed files will be uploaded)"
+          if [ -n "${{ secrets.SSH_HOST }}" ]; then
+            echo "✅ SSH_HOST is set → will run rsync step"
           else
-            echo "⚠️ Using FTP – uploads can be slow (add SSH secrets for fast rsync)"
+            echo "⚠️ SSH_HOST secret is empty or missing → will run FTP step (add SSH_HOST in Settings → Secrets)"
           fi
       - name: Check FTP secrets (when not using SSH)
-        if: needs.check-deploy-method.outputs.use_ssh != 'true'
+        if: ${{ secrets.SSH_HOST == '' }}
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -253,7 +253,7 @@ jobs:
         run: cp cpanel-htaccess frontend/out/.htaccess
 
       - name: Deploy frontend via rsync (fast)
-        if: needs.check-deploy-method.outputs.use_ssh == 'true'
+        if: ${{ secrets.SSH_HOST != '' }}
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
@@ -271,7 +271,7 @@ jobs:
           rm -f ~/.ssh/deploy_key
 
       - name: Deploy frontend via FTP
-        if: needs.check-deploy-method.outputs.use_ssh != 'true'
+        if: ${{ secrets.SSH_HOST == '' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
