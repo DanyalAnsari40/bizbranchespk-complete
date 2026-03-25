@@ -123,7 +123,12 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          KEYSCAN_OUTPUT="$(ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" 2>/dev/null || true)"
+          if [ -z "$KEYSCAN_OUTPUT" ]; then
+            echo "::error::Unable to reach SSH on $SSH_HOST:$SSH_PORT (ssh-keyscan returned no keys). Check SSH_PORT/SSH_HOST and that the SSH service allows connections."
+            exit 1
+          fi
+          printf '%s\n' "$KEYSCAN_OUTPUT" >> ~/.ssh/known_hosts
           rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -p $SSH_PORT" \
             --exclude='.git' --exclude='.env' \
             --exclude='scripts/*.json' \
@@ -217,7 +222,12 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          KEYSCAN_OUTPUT="$(ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" 2>/dev/null || true)"
+          if [ -z "$KEYSCAN_OUTPUT" ]; then
+            echo "::error::Unable to reach SSH on $SSH_HOST:$SSH_PORT (ssh-keyscan returned no keys). Check SSH_PORT/SSH_HOST and that the SSH service allows connections."
+            exit 1
+          fi
+          printf '%s\n' "$KEYSCAN_OUTPUT" >> ~/.ssh/known_hosts
           rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -p $SSH_PORT" \
             --exclude='.git' --exclude='api' \
             frontend/out/ "$SSH_USER@$SSH_HOST:$REMOTE_WEB/"
