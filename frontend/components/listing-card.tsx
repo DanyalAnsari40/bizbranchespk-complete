@@ -134,16 +134,21 @@ function ListingCardInner({ business, variant = "compact", className }: ListingC
     return (
       <Link href={href} className={cn(CARD_LINK_CLASS, "block group h-full", className)} aria-label={ariaLabel}>
         <div className="h-full overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all duration-200 group-hover:border-primary/20">
-          <div className="relative h-32 overflow-hidden bg-gradient-to-br from-primary/5 to-purple-50">
-            <div className="absolute inset-0 flex items-center justify-center p-4 relative">
-              <BusinessLogo
-                src={logoFor(business, "thumb")}
-                fill
-                sizes="128px"
-                className="object-contain transition-opacity group-hover:opacity-90"
-              />
+          <div className="relative h-44 overflow-hidden bg-gradient-to-br from-primary/5 via-purple-50/60 to-pink-50/50">
+            {/* Logo badge: make logos feel bigger + consistent (circle). */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white/95 backdrop-blur-sm shadow-lg ring-2 ring-primary/10 border border-gray-200 overflow-hidden">
+                <div className="absolute inset-0 p-4 sm:p-4.5">
+                  <BusinessLogo
+                    src={logoFor(business, "thumb")}
+                    fill
+                    sizes="(max-width: 640px) 96px, 112px"
+                    className="object-contain transition-opacity group-hover:opacity-90"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white via-white/90 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white via-white/95 to-transparent" />
           </div>
           <div className="p-3 sm:p-4">
             <h3 className="font-bold text-sm sm:text-base text-gray-900 group-hover:text-primary transition-colors line-clamp-2 mb-1.5">
