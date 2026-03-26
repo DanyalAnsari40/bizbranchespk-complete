@@ -73,8 +73,14 @@ jobs:
           SK: ${{ secrets.SSH_PRIVATE_KEY }}
       - id: method
         run: |
-          # Use SSH deploy only when all required SSH secrets are present.
-          # Otherwise fall back to FTP deploy (if FTP secrets are set).
+          # Prefer FTP when FTP secrets are set. This avoids accidental SSH deploy attempts
+          # (and ssh-keyscan failures) when an old SSH_HOST secret still exists.
+          if [ -n "$FTP_SERVER" ] && [ -n "$FTP_USERNAME" ] && [ -n "$FTP_PASSWORD" ]; then
+            echo "use_ssh=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Otherwise, use SSH only when all required SSH secrets are present.
           if [ -n "$SSH_HOST" ] && [ -n "$SSH_USERNAME" ] && [ -n "$SSH_PRIVATE_KEY" ]; then
             echo "use_ssh=true" >> $GITHUB_OUTPUT
           else
@@ -84,6 +90,9 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
 
   deploy-backend:
     name: Deploy PHP Backend
