@@ -73,9 +73,17 @@ jobs:
           SK: ${{ secrets.SSH_PRIVATE_KEY }}
       - id: method
         run: |
-          if [ -n "$SSH_HOST" ]; then echo "use_ssh=true"; else echo "use_ssh=false"; fi >> $GITHUB_OUTPUT
+          # Use SSH deploy only when all required SSH secrets are present.
+          # Otherwise fall back to FTP deploy (if FTP secrets are set).
+          if [ -n "$SSH_HOST" ] && [ -n "$SSH_USERNAME" ] && [ -n "$SSH_PRIVATE_KEY" ]; then
+            echo "use_ssh=true" >> $GITHUB_OUTPUT
+          else
+            echo "use_ssh=false" >> $GITHUB_OUTPUT
+          fi
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
   deploy-backend:
     name: Deploy PHP Backend
@@ -85,11 +93,18 @@ jobs:
       github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'backend' || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == '') ||
       github.event_name != 'workflow_dispatch'
     steps:
-      - name: Require SSH (deploy is SSH-only)
+      - name: Check FTP secrets (when not using SSH)
         if: needs.check-deploy-method.outputs.use_ssh != 'true'
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
-          echo "::error::SSH required. Add repo secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY (optional: SSH_PORT, SSH_REMOTE_WEB_ROOT, SSH_REMOTE_API_PATH)"
-          exit 1
+          if [ -z "$FTP_SERVER" ] || [ -z "$FTP_USERNAME" ] || [ -z "$FTP_PASSWORD" ]; then
+            echo "::error::Set FTP_SERVER, FTP_USERNAME, FTP_PASSWORD (and optionally FTP_DEPLOY_DIR). Or set SSH_HOST + SSH_USERNAME + SSH_PRIVATE_KEY for rsync deploy."
+            exit 1
+          fi
+          echo "FTP secrets OK"
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -112,6 +127,7 @@ jobs:
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
       - name: Deploy backend via rsync
+        if: needs.check-deploy-method.outputs.use_ssh == 'true'
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
@@ -136,6 +152,27 @@ jobs:
             backend-php/ "$SSH_USER@$SSH_HOST:$REMOTE_API/"
           rm -f ~/.ssh/deploy_key
 
+      - name: Deploy backend via FTP
+        if: needs.check-deploy-method.outputs.use_ssh != 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: backend-php/
+          # Recommended: set FTP_DEPLOY_DIR to your web root like '/public_html/' (include trailing slash)
+          server-dir: ${{ secrets.FTP_DEPLOY_DIR || './' }}api/
+          state-name: .ftp-deploy-sync-state-backend.json
+          log-level: minimal
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.env
+            **/scripts/*.json
+            **/migrations/**
+            **/run-migration.php
+
   deploy-frontend:
     name: Build & Deploy Frontend (Static)
     runs-on: ubuntu-latest
@@ -144,11 +181,18 @@ jobs:
       github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'frontend' || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == '') ||
       github.event_name != 'workflow_dispatch'
     steps:
-      - name: Require SSH (deploy is SSH-only)
+      - name: Check FTP secrets (when not using SSH)
         if: needs.check-deploy-method.outputs.use_ssh != 'true'
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
-          echo "::error::SSH required. Add repo secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY (optional: SSH_PORT, SSH_REMOTE_WEB_ROOT)"
-          exit 1
+          if [ -z "$FTP_SERVER" ] || [ -z "$FTP_USERNAME" ] || [ -z "$FTP_PASSWORD" ]; then
+            echo "::error::Set FTP_SERVER, FTP_USERNAME, FTP_PASSWORD (and optionally FTP_DEPLOY_DIR). Or set SSH_HOST + SSH_USERNAME + SSH_PRIVATE_KEY for rsync deploy."
+            exit 1
+          fi
+          echo "FTP secrets OK"
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -211,6 +255,7 @@ jobs:
         run: cp cpanel-htaccess frontend/out/.htaccess
 
       - name: Deploy frontend via rsync
+        if: needs.check-deploy-method.outputs.use_ssh == 'true'
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
@@ -232,3 +277,21 @@ jobs:
             --exclude='.git' --exclude='api' \
             frontend/out/ "$SSH_USER@$SSH_HOST:$REMOTE_WEB/"
           rm -f ~/.ssh/deploy_key
+
+      - name: Deploy frontend via FTP
+        if: needs.check-deploy-method.outputs.use_ssh != 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: frontend/out/
+          # Recommended: set FTP_DEPLOY_DIR to your web root like '/public_html/' (include trailing slash)
+          server-dir: ${{ secrets.FTP_DEPLOY_DIR || './' }}
+          state-name: .ftp-deploy-sync-state-frontend.json
+          log-level: minimal
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/api/**
