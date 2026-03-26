@@ -2,7 +2,7 @@ const isProd = process.env.NODE_ENV === "production";
 const isStaticExport = !!process.env.NEXT_PUBLIC_STATIC_EXPORT;
 
 const nextConfig = {
-  output: "export",
+  ...(isStaticExport ? { output: "export" } : {}),
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   productionBrowserSourceMaps: false,

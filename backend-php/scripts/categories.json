@@ -1,0 +1,554 @@
+[
+  {
+    "_id": "68b8094b0ccde60e3e7bec05",
+    "slug": "bank",
+    "createdAt": "2025-09-03T09:24:26.550Z",
+    "imagePublicId": "inline-data-url",
+    "imageUrl": null,
+    "name": "Bank",
+    "count": 1988,
+    "subcategories": [
+      {
+        "slug": "meezan-bank",
+        "name": "Meezan bank",
+        "count": 1019
+      },
+      {
+        "slug": "hbl-bank",
+        "name": "HBL Bank",
+        "count": 72
+      },
+      {
+        "slug": "halan-microfinance-bank",
+        "name": "Halan Microfinance Bank",
+        "count": 27
+      },
+      {
+        "slug": "standard-chartered-bank",
+        "name": "Standard chartered Bank",
+        "count": 36
+      },
+      {
+        "slug": "citibank-pakistan",
+        "name": "Citibank Pakistan",
+        "count": 3
+      },
+      {
+        "slug": "first-women-bank-ltd",
+        "name": "First Women Bank Ltd",
+        "count": 35
+      },
+      {
+        "slug": "soneri-bank",
+        "name": "Soneri Bank",
+        "count": 305
+      },
+      {
+        "slug": "bankislami",
+        "name": "BankIslami",
+        "count": 455
+      }
+    ]
+  },
+  {
+    "_id": "68ba9b4e0ccde60e3e7bee56",
+    "slug": "education",
+    "createdAt": "2025-09-05T08:11:58.525Z",
+    "imagePublicId": "citation/category-images/j0kaytfcxgkagwx1trfe",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1760270566/citation/category-images/j0kaytfcxgkagwx1trfe.jpg",
+    "name": "Education",
+    "subcategories": [
+      {
+        "slug": "school",
+        "name": "School",
+        "count": 7
+      },
+      {
+        "slug": "university",
+        "name": "University",
+        "count": 1
+      },
+      {
+        "slug": "college",
+        "name": "College",
+        "count": 0
+      }
+    ],
+    "count": 9
+  },
+  {
+    "_id": "68bab1f10ccde60e3e7bee6c",
+    "slug": "laboratory",
+    "createdAt": "2025-09-05T09:48:32.012Z",
+    "imagePublicId": "citation/category-images/aekcoyxyyshlltlacamd",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1757756022/citation/category-images/aekcoyxyyshlltlacamd.jpg",
+    "name": "Laboratory",
+    "subcategories": [
+      {
+        "slug": "advance-lab",
+        "name": "Advance Lab",
+        "count": 19
+      },
+      {
+        "slug": "chughtai-lab",
+        "name": "Chughtai Lab",
+        "count": 0
+      },
+      {
+        "slug": "shaukat-khanum-laboratory",
+        "name": "Shaukat khanum Laboratory",
+        "count": 0
+      },
+      {
+        "slug": "tti-lab",
+        "name": "Tti Lab",
+        "count": 7
+      },
+      {
+        "slug": "aga-khan-laboratory",
+        "name": "Aga Khan Laboratory",
+        "count": 0
+      },
+      {
+        "slug": "citi-lab-and-research-center",
+        "name": "Citi Lab and Research Center",
+        "count": 0
+      }
+    ],
+    "count": 27
+  },
+  {
+    "_id": "68c5adf517d861c99705014d",
+    "slug": "hospital",
+    "createdAt": "2025-09-13T17:46:29.175Z",
+    "imagePublicId": "citation/category-images/q53mmy4czkhayonwv76e",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1757929538/citation/category-images/q53mmy4czkhayonwv76e.png",
+    "name": "Hospital",
+    "subcategories": [
+      {
+        "slug": "government-hospital",
+        "name": "Government Hospital",
+        "count": 0
+      },
+      {
+        "slug": "private-hospital",
+        "name": "Private Hospital",
+        "count": 21
+      },
+      {
+        "slug": "trust-charity-hospital",
+        "name": "Trust / Charity Hospital",
+        "count": 2
+      }
+    ],
+    "count": 23
+  },
+  {
+    "_id": "68c6361617d861c99705018a",
+    "slug": "information-technology-it-services",
+    "createdAt": "2025-09-14T03:27:18.863Z",
+    "imagePublicId": "citation/category-images/muxolwm1opomohfgb5sh",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1758698694/citation/category-images/muxolwm1opomohfgb5sh.jpg",
+    "name": "Information Technology (IT) & Services",
+    "subcategories": [
+      {
+        "slug": "software-house",
+        "name": "Software House",
+        "count": 0
+      },
+      {
+        "slug": "digital-marketing-agency",
+        "name": "Digital Marketing Agency",
+        "count": 0
+      },
+      {
+        "slug": "it-training-institute",
+        "name": "IT Training Institute",
+        "count": 0
+      },
+      {
+        "slug": "call-center",
+        "name": "Call Center",
+        "count": 0
+      },
+      {
+        "slug": "hosting-companies",
+        "name": "Hosting Companies",
+        "count": 0
+      }
+    ]
+  },
+  {
+    "_id": "68d386478869fcb473f49861",
+    "slug": "real-estate",
+    "createdAt": "2025-09-24T05:48:55.486Z",
+    "imagePublicId": "citation/category-images/t0vbqcpvxwmmbae3aun1",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1759336383/citation/category-images/t0vbqcpvxwmmbae3aun1.jpg",
+    "name": "Real Estate",
+    "subcategories": [
+      {
+        "slug": "housing-society",
+        "name": "Housing Society",
+        "count": 0
+      },
+      {
+        "slug": "property-dealers-developers",
+        "name": "Property Dealers & Developers",
+        "count": 2
+      }
+    ],
+    "count": 2
+  },
+  {
+    "_id": "68de1e99facf7f7c74781042",
+    "slug": "local-shops-traders",
+    "createdAt": "2025-10-02T07:59:59.999Z",
+    "imagePublicId": "citation/category-images/lu1f7xtxv32jmq6qdgfb",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1760270625/citation/category-images/lu1f7xtxv32jmq6qdgfb.jpg",
+    "name": "Local Shops & Traders",
+    "subcategories": [
+      {
+        "slug": "grocery-stores",
+        "name": "Grocery Stores",
+        "count": 0
+      },
+      {
+        "slug": "general-stores",
+        "name": "General Stores",
+        "count": 0
+      },
+      {
+        "slug": "electronics-shops",
+        "name": "Electronics Shops",
+        "count": 0
+      },
+      {
+        "slug": "mobile-shops",
+        "name": "Mobile Shops",
+        "count": 0
+      },
+      {
+        "slug": "garments-clothing-shops",
+        "name": "Garments & Clothing Shops",
+        "count": 0
+      },
+      {
+        "slug": "shoes-shops",
+        "name": "Shoes Shops",
+        "count": 0
+      },
+      {
+        "slug": "furniture-stores",
+        "name": "Furniture Stores",
+        "count": 0
+      },
+      {
+        "slug": "tyres-spare-parts-dealers",
+        "name": "Tyres & Spare Parts Dealers",
+        "count": 0
+      },
+      {
+        "slug": "hardware-sanitary-stores",
+        "name": "Hardware & Sanitary Stores",
+        "count": 0
+      }
+    ],
+    "count": 0
+  },
+  {
+    "_id": "68de1f0efacf7f7c74781043",
+    "slug": "bus-companies",
+    "createdAt": "2025-10-02T07:59:59.999Z",
+    "imagePublicId": "citation/category-images/tuoxacu2hz3jgnqk6gxd",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1760270777/citation/category-images/tuoxacu2hz3jgnqk6gxd.jpg",
+    "name": "Bus Companies",
+    "subcategories": [
+      {
+        "slug": "daewoo-express",
+        "name": "Daewoo Express",
+        "count": 64
+      },
+      {
+        "slug": "faisal-movers",
+        "name": "Faisal Movers",
+        "count": 0
+      },
+      {
+        "slug": "skyways",
+        "name": "Skyways",
+        "count": 1
+      },
+      {
+        "slug": "niazi-express",
+        "name": "Niazi Express",
+        "count": 0
+      },
+      {
+        "slug": "kohistan-express",
+        "name": "Kohistan Express",
+        "count": 0
+      },
+      {
+        "slug": "road-master",
+        "name": "Road Master",
+        "count": 0
+      },
+      {
+        "slug": "bilal-travels",
+        "name": "Bilal Travels",
+        "count": 0
+      },
+      {
+        "slug": "waraich-express",
+        "name": "Waraich Express",
+        "count": 0
+      }
+    ],
+    "count": 65
+  },
+  {
+    "_id": "68de1f2cfacf7f7c74781044",
+    "slug": "courier-cargo-companies",
+    "createdAt": "2025-10-02T07:59:59.999Z",
+    "imagePublicId": "citation/category-images/kjnmhllowc6xwtjuycgp",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1760270791/citation/category-images/kjnmhllowc6xwtjuycgp.jpg",
+    "name": "Courier & Cargo Companies",
+    "subcategories": [
+      {
+        "slug": "tcs",
+        "name": "TCS",
+        "count": 0
+      },
+      {
+        "slug": "leopards-courier",
+        "name": "Leopards Courier",
+        "count": 0
+      },
+      {
+        "slug": "m-p-courier",
+        "name": "M&P Courier",
+        "count": 0
+      },
+      {
+        "slug": "pakistan-post",
+        "name": "Pakistan Post",
+        "count": 0
+      },
+      {
+        "slug": "call-courier",
+        "name": "Call Courier",
+        "count": 1
+      },
+      {
+        "slug": "blueex",
+        "name": "BlueEx",
+        "count": 1
+      },
+      {
+        "slug": "dhl-express",
+        "name": "DHL Express",
+        "count": 0
+      },
+      {
+        "slug": "mp-courier",
+        "name": "M&P Courier",
+        "count": 2
+      },
+      {
+        "slug": "asia-cargo-service",
+        "name": "Asia Cargo Service",
+        "count": 2
+      }
+    ],
+    "count": 6
+  },
+  {
+    "_id": "68de1f9afacf7f7c74781045",
+    "slug": "restaurants & food-chains",
+    "createdAt": "2025-10-02T07:59:59.999Z",
+    "imagePublicId": "citation/category-images/dk2litcsxhtchya0zbif",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1760270598/citation/category-images/dk2litcsxhtchya0zbif.jpg",
+    "name": "Restaurants & Food Chains",
+    "subcategories": [
+      {
+        "slug": "mcdonalds",
+        "name": "McDonald’s",
+        "count": 0
+      },
+      {
+        "slug": "kfc",
+        "name": "KFC",
+        "count": 0
+      },
+      {
+        "slug": "pizza-hut",
+        "name": "Pizza Hut",
+        "count": 0
+      },
+      {
+        "slug": "dominos-pizza",
+        "name": "Domino’s Pizza",
+        "count": 0
+      },
+      {
+        "slug": "subway",
+        "name": "Subway",
+        "count": 0
+      },
+      {
+        "slug": "optp",
+        "name": "OPTP",
+        "count": 0
+      },
+      {
+        "slug": "hardees",
+        "name": "Hardee’s",
+        "count": 0
+      },
+      {
+        "slug": "johnny-jugnu",
+        "name": "Johnny & Jugnu",
+        "count": 0
+      },
+      {
+        "slug": "student-biryani",
+        "name": "Student Biryani",
+        "count": 0
+      },
+      {
+        "slug": "local-food-chains",
+        "name": "Local Food Chains",
+        "count": 0
+      }
+    ],
+    "count": 0
+  },
+  {
+    "_id": "68de1fb7facf7f7c74781046",
+    "slug": "hotels-guest-houses",
+    "createdAt": "2025-10-02T07:59:59.999Z",
+    "imagePublicId": "citation/category-images/pb3uw2uao3gxcb9xm9do",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1757929446/citation/category-images/pb3uw2uao3gxcb9xm9do.png",
+    "name": "Hotels & Guest Houses",
+    "subcategories": [
+      {
+        "slug": "pearl-continental",
+        "name": "Pearl Continental",
+        "count": 0
+      },
+      {
+        "slug": "serena-hotels",
+        "name": "Serena Hotels",
+        "count": 0
+      },
+      {
+        "slug": "marriott-hotels",
+        "name": "Marriott Hotels",
+        "count": 0
+      },
+      {
+        "slug": "avari-hotels",
+        "name": "Avari Hotels",
+        "count": 1
+      },
+      {
+        "slug": "best-western-hotels",
+        "name": "Best Western Hotels",
+        "count": 2
+      },
+      {
+        "slug": "hotel-one",
+        "name": "Hotel One",
+        "count": 1
+      },
+      {
+        "slug": "falettis-hotel",
+        "name": "Faletti’s Hotel",
+        "count": 0
+      },
+      {
+        "slug": "local-guest-houses",
+        "name": "Local Guest Houses",
+        "count": 0
+      }
+    ],
+    "count": 4
+  },
+  {
+    "_id": "68de1fcafacf7f7c74781047",
+    "slug": "shopping-retail-chains",
+    "createdAt": "2025-10-02T07:59:59.999Z",
+    "imagePublicId": "citation/category-images/cza2ljiu0n9h9ukxdpg2",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1759388201/citation/category-images/cza2ljiu0n9h9ukxdpg2.jpg",
+    "name": "Shopping & Retail Chains",
+    "subcategories": [
+      {
+        "slug": "imtiaz-super-market",
+        "name": "Imtiaz Super Market",
+        "count": 0
+      },
+      {
+        "slug": "metro-cash-carry",
+        "name": "Metro Cash & Carry",
+        "count": 0
+      },
+      {
+        "slug": "carrefour",
+        "name": "Carrefour",
+        "count": 0
+      },
+      {
+        "slug": "al-fatah",
+        "name": "Al-Fatah",
+        "count": 0
+      },
+      {
+        "slug": "chase-up",
+        "name": "Chase Up",
+        "count": 0
+      },
+      {
+        "slug": "hyperstar",
+        "name": "Hyperstar",
+        "count": 0
+      }
+    ],
+    "count": 0
+  },
+  {
+    "_id": "68de1fe1facf7f7c74781048",
+    "slug": "telecom-companies",
+    "createdAt": "2025-10-02T07:59:59.999Z",
+    "imagePublicId": "citation/category-images/pb3uw2uao3gxcb9xm9do",
+    "imageUrl": "https://res.cloudinary.com/di1j7auro/image/upload/v1757929446/citation/category-images/pb3uw2uao3gxcb9xm9do.png",
+    "name": "Telecom Companies",
+    "subcategories": [
+      {
+        "slug": "jazz",
+        "name": "Jazz",
+        "count": 0
+      },
+      {
+        "slug": "zong",
+        "name": "Zong",
+        "count": 0
+      },
+      {
+        "slug": "telenor",
+        "name": "Telenor",
+        "count": 1
+      },
+      {
+        "slug": "ufone",
+        "name": "Ufone",
+        "count": 0
+      },
+      {
+        "slug": "ptcl",
+        "name": "PTCL",
+        "count": 0
+      }
+    ],
+    "count": 1
+  }
+]

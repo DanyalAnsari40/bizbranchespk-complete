@@ -1,10 +1,18 @@
 import { Metadata } from "next"
 import { SITE_NAME, SITE_URL } from "@/lib/site"
 import { getBackendUrl } from "@/lib/api"
+import { getBuildSlugs } from "@/lib/build-slugs"
 import { CategoryPageClient } from "./category-page-client"
 
-export function generateStaticParams() {
-  return [{ slug: '_placeholder' }];
+export async function generateStaticParams() {
+  const params: { slug: string }[] = [{ slug: '_placeholder' }];
+  try {
+    const { categories } = await getBuildSlugs();
+    for (const c of categories) {
+      if (c.slug && c.slug !== '_placeholder') params.push({ slug: c.slug });
+    }
+  } catch {}
+  return params;
 }
 
 function prettySlug(slug: string) {

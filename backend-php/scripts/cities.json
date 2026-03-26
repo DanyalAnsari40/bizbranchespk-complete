@@ -1,0 +1,56 @@
+[
+  {
+    "_id": "68e92d9c9e2e1256019565c2",
+    "name": "Karachi",
+    "slug": "karachi",
+    "province": "Sindh",
+    "country": "Pakistan",
+    "isActive": true,
+    "createdAt": "2025-10-10T16:00:28.979Z"
+  },
+  {
+    "_id": "68e92d9c9e2e1256019565c3",
+    "name": "Lahore",
+    "slug": "lahore",
+    "province": "Punjab",
+    "country": "Pakistan",
+    "isActive": true,
+    "createdAt": "2025-10-10T16:00:28.979Z"
+  },
+  {
+    "_id": "68e92d9c9e2e1256019565c4",
+    "name": "Islamabad",
+    "slug": "islamabad",
+    "province": "Federal Capital",
+    "country": "Pakistan",
+    "isActive": true,
+    "createdAt": "2025-10-10T16:00:28.979Z"
+  },
+  {
+    "_id": "68e92d9c9e2e1256019565c5",
+    "name": "Rawalpindi",
+    "slug": "rawalpindi",
+    "province": "Punjab",
+    "country": "Pakistan",
+    "isActive": true,
+    "createdAt": "2025-10-10T16:00:28.979Z"
+  },
+  {
+    "_id": "68e92d9c9e2e1256019565c6",
+    "name": "Faisalabad",
+    "slug": "faisalabad",
+    "province": "Punjab",
+    "country": "Pakistan",
+    "isActive": true,
+    "createdAt": "2025-10-10T16:00:28.979Z"
+  },
+  {
+    "_id": "68e92d9c9e2e1256019565c7",
+    "name": "Multan",
+    "slug": "multan",
+    "province": "Punjab",
+    "country": "Pakistan",
+    "isActive": true,
+    "createdAt": "2025-10-10T16:00:28.979Z"
+  }
+]
