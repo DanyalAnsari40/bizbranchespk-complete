@@ -13,8 +13,7 @@ export default function GlobalContainer({ children }: PropsWithChildren) {
     pathname.startsWith("/search") ||
     pathname.startsWith("/city") ||
     pathname.startsWith("/category") ||
-    pathname.startsWith("/pending") ||
-    pathname.startsWith("/admin")
+    pathname.startsWith("/pending")
   )
 
   if (!shouldWrap) return <>{children}</>

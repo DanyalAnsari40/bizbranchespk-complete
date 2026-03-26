@@ -42,15 +42,10 @@ function registerCitiesRoutes(Router $router): void {
 }
 
 function loadPakistanCitiesFromJson(): array {
-    $paths = [
-        __DIR__ . '/../data/pakistan-cities.json',
-        __DIR__ . '/../../backend/data/pakistan-cities.json',
-    ];
-    foreach ($paths as $path) {
-        if (file_exists($path)) {
-            $data = json_decode(file_get_contents($path), true);
-            if (is_array($data)) return $data;
-        }
+    $path = __DIR__ . '/../data/pakistan-cities.json';
+    if (file_exists($path)) {
+        $data = json_decode(file_get_contents($path), true);
+        if (is_array($data)) return $data;
     }
     return [];
 }

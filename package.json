@@ -2,37 +2,16 @@
   "name": "bizbranches-combined",
   "version": "1.0.0",
   "private": true,
-  "description": "BizBranches - Frontend + Backend combined",
+  "description": "BizBranches - Next.js frontend + PHP backend (MySQL)",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "concurrently \"npm run start:backend-php\" \"npm run dev:frontend\"",
     "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run dev",
-    "build": "npm run install:all && npm run build:backend && npm run build:frontend",
+    "build": "npm install && cd frontend && npm install && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "build:backend": "node node_modules/typescript/bin/tsc -p backend/tsconfig.json",
-    "start": "sh start.sh",
-    "start:php": "sh start-php.sh",
+    "start": "sh start-php.sh",
     "start:frontend": "cd frontend && npm run start",
-    "start:backend": "cd backend && npm run start",
     "start:backend-php": "cd backend-php && php -S 0.0.0.0:3002 index.php",
-    "dev:php": "concurrently \"npm run start:backend-php\" \"npm run dev:frontend\"",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
-    "migrate:sql": "cd backend-php && php scripts/migrate_from_mongodb.php"
-  },
-  "dependencies": {
-    "typescript": "^5.9.3",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.0",
-    "@types/multer": "^1.4.12",
-    "@types/node": "^22",
-    "cloudinary": "^2.5.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "mongodb": "^6.19.0",
-    "multer": "^1.4.5-lts.1",
-    "node-fetch": "^3.3.2",
-    "zod": "^3.25.67"
+    "install:all": "npm install && cd frontend && npm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

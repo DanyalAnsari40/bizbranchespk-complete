@@ -391,7 +391,8 @@ function registerBusinessRoutes(Router $router): void {
     $router->get('/api/business/{slug}', function($params) {
         try {
             $pdo = db();
-            $param = $params['slug'] ?? '';
+            $param = trim($params['slug'] ?? '');
+            $param = rawurldecode($param);
             if (!$param) Response::error('Slug or id is required', 400);
 
             $business = null;

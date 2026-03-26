@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS categories (
     INDEX idx_is_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Subcategories table (normalized from MongoDB nested array)
+-- Subcategories table
 CREATE TABLE IF NOT EXISTS subcategories (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     category_id INT UNSIGNED NOT NULL,
@@ -150,5 +150,4 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     INDEX idx_window (window_start)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- No default seed data -- real data will be imported from MongoDB JSON exports
--- Run: php scripts/migrate_from_mongodb.php (after uploading JSON files)
+-- No default seed data; populate via your application or imports.

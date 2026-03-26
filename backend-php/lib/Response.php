@@ -16,7 +16,8 @@ class Response {
     }
 
     public static function error(string $message, int $status = 500, array $extra = []): void {
-        self::json(array_merge(['ok' => false, 'error' => $message], $extra), $status);
+        $headers = ($status === 404) ? ['Cache-Control' => 'no-store, no-cache, must-revalidate'] : [];
+        self::json(array_merge(['ok' => false, 'error' => $message], $extra), $status, $headers);
     }
 
     public static function cached(array $data, string $cacheControl = 's-maxage=300, stale-while-revalidate=600'): void {

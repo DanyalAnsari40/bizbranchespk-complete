@@ -1,31 +1,95 @@
-name: Deploy to cPanel via FTP
+# Deploy to cPanel via SSH + rsync only.
+# Required secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY.
+# Optional: SSH_PORT (default 22), SSH_REMOTE_WEB_ROOT, SSH_REMOTE_API_PATH.
+
+name: Deploy to cPanel
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'Deploy target (leave empty to use path detection on push)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - frontend
+          - backend
+          - all
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: "20"
   PHP_VERSION: "8.2"
 
 jobs:
+  detect-changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      config: ${{ steps.filter.outputs.config }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend-php/**'
+            frontend:
+              - 'frontend/**'
+              - 'cpanel-htaccess'
+            config:
+              - '.github/workflows/**'
+
+  check-deploy-method:
+    name: Check deploy method
+    runs-on: ubuntu-latest
+    outputs:
+      use_ssh: ${{ steps.method.outputs.use_ssh }}
+    steps:
+      - name: Which SSH secrets are set? (values never printed)
+        run: |
+          echo "Repository secrets (Names must be EXACT, case-sensitive):"
+          echo "  SSH_HOST         = $([ -n \"$SH\" ] && echo 'SET' || echo 'MISSING')"
+          echo "  SSH_USERNAME     = $([ -n \"$SU\" ] && echo 'SET' || echo 'MISSING')"
+          echo "  SSH_PRIVATE_KEY  = $([ -n \"$SK\" ] && echo 'SET' || echo 'MISSING')"
+          echo ""
+          if [ -z "$SH" ]; then
+            echo "→ Add SSH_HOST:  Repo → Settings → Secrets and variables → Actions → New repository secret"
+            echo "  Name: SSH_HOST  (exactly this, no space)   Value: your server hostname e.g. bizbranches.pk"
+          fi
+        env:
+          SH: ${{ secrets.SSH_HOST }}
+          SU: ${{ secrets.SSH_USERNAME }}
+          SK: ${{ secrets.SSH_PRIVATE_KEY }}
+      - id: method
+        run: |
+          if [ -n "$SSH_HOST" ]; then echo "use_ssh=true"; else echo "use_ssh=false"; fi >> $GITHUB_OUTPUT
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+
   deploy-backend:
     name: Deploy PHP Backend
     runs-on: ubuntu-latest
+    needs: [detect-changes, check-deploy-method]
+    if: |
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'backend' || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == '') ||
+      github.event_name != 'workflow_dispatch'
     steps:
-      - name: Check required secrets
-        env:
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      - name: Require SSH (deploy is SSH-only)
+        if: needs.check-deploy-method.outputs.use_ssh != 'true'
         run: |
-          if [ -z "$FTP_SERVER" ] || [ -z "$FTP_USERNAME" ] || [ -z "$FTP_PASSWORD" ]; then
-            echo "::error::Set FTP_SERVER, FTP_USERNAME, FTP_PASSWORD in repo Settings > Secrets and variables > Actions"
-            echo "Optional: FTP_DEPLOY_DIR (defaults to ./ i.e. FTP root), SITE_URL, CLOUDINARY_CLOUD_NAME"
-            exit 1
-          fi
-          echo "Secrets OK"
+          echo "::error::SSH required. Add repo secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY (optional: SSH_PORT, SSH_REMOTE_WEB_ROOT, SSH_REMOTE_API_PATH)"
+          exit 1
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,33 +100,56 @@ jobs:
           php-version: ${{ env.PHP_VERSION }}
           tools: composer:v2
 
+      - name: Cache Composer vendor
+        uses: actions/cache@v4
+        with:
+          path: backend-php/vendor
+          key: composer-${{ runner.os }}-${{ hashFiles('backend-php/composer.json') }}
+          restore-keys: composer-${{ runner.os }}-
+
       - name: Install Composer dependencies
         working-directory: backend-php
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
-      - name: Deploy backend to cPanel /api/ via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: backend-php/
-          server-dir: ${{ secrets.FTP_DEPLOY_DIR || './' }}api/
-          dangerous-clean-slate: false
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/.env
-            **/scripts/*.json
-            **/scripts/mongo_id_map.json
-            **/migrations/**
-            **/run-migration.php
+      - name: Deploy backend via rsync
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          SSH_USER: ${{ secrets.SSH_USERNAME }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_API: ${{ secrets.SSH_REMOTE_API_PATH || 'public_html/api' }}
+        run: |
+          echo "SSH target: host length=${#SSH_HOST} chars, port length=${#SSH_PORT} chars (e.g. 2=22, 5=21098)"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          KEYSCAN_OUTPUT="$(ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" 2>/dev/null || true)"
+          if [ -z "$KEYSCAN_OUTPUT" ]; then
+            echo "::error::Unable to reach SSH on $SSH_HOST:$SSH_PORT (ssh-keyscan returned no keys). Check SSH_PORT/SSH_HOST and that the SSH service allows connections."
+            exit 1
+          fi
+          printf '%s\n' "$KEYSCAN_OUTPUT" >> ~/.ssh/known_hosts
+          rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -p $SSH_PORT" \
+            --exclude='.git' --exclude='.env' \
+            --exclude='scripts/*.json' \
+            --exclude='migrations' --exclude='run-migration.php' \
+            backend-php/ "$SSH_USER@$SSH_HOST:$REMOTE_API/"
+          rm -f ~/.ssh/deploy_key
 
   deploy-frontend:
     name: Build & Deploy Frontend (Static)
     runs-on: ubuntu-latest
-    needs: [deploy-backend]
+    needs: [detect-changes, check-deploy-method]
+    if: |
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'frontend' || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == '') ||
+      github.event_name != 'workflow_dispatch'
     steps:
+      - name: Require SSH (deploy is SSH-only)
+        if: needs.check-deploy-method.outputs.use_ssh != 'true'
+        run: |
+          echo "::error::SSH required. Add repo secrets: SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY (optional: SSH_PORT, SSH_REMOTE_WEB_ROOT)"
+          exit 1
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -70,10 +157,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'frontend/pnpm-lock.yaml') }}
+          restore-keys: npm-${{ runner.os }}-
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm install
+        run: npm ci --prefer-offline
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: frontend/.next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'frontend/pnpm-lock.yaml', 'frontend/next.config.mjs') }}
+          restore-keys: nextjs-${{ runner.os }}-
 
       - name: Create frontend .env
         working-directory: frontend
@@ -107,16 +210,25 @@ jobs:
       - name: Copy .htaccess to out
         run: cp cpanel-htaccess frontend/out/.htaccess
 
-      - name: Deploy static site to cPanel via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: frontend/out/
-          server-dir: ${{ secrets.FTP_DEPLOY_DIR || './' }}
-          dangerous-clean-slate: false
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/api/**
+      - name: Deploy frontend via rsync
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          SSH_USER: ${{ secrets.SSH_USERNAME }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_WEB: ${{ secrets.SSH_REMOTE_WEB_ROOT || 'public_html' }}
+        run: |
+          echo "SSH target: host length=${#SSH_HOST} chars, port length=${#SSH_PORT} chars (e.g. 2=22, 5=21098)"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          KEYSCAN_OUTPUT="$(ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" 2>/dev/null || true)"
+          if [ -z "$KEYSCAN_OUTPUT" ]; then
+            echo "::error::Unable to reach SSH on $SSH_HOST:$SSH_PORT (ssh-keyscan returned no keys). Check SSH_PORT/SSH_HOST and that the SSH service allows connections."
+            exit 1
+          fi
+          printf '%s\n' "$KEYSCAN_OUTPUT" >> ~/.ssh/known_hosts
+          rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -p $SSH_PORT" \
+            --exclude='.git' --exclude='api' \
+            frontend/out/ "$SSH_USER@$SSH_HOST:$REMOTE_WEB/"
+          rm -f ~/.ssh/deploy_key

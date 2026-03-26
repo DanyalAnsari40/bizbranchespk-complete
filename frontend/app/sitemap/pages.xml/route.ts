@@ -75,13 +75,19 @@ export async function GET() {
       const geoRes = await fetch(`${base}/api/sitemap/geo-pages`, { next: { revalidate: 600 } });
       if (geoRes.ok) {
         const geo = await geoRes.json();
+        // PHP returns path strings "city/category"; Node returns {city, category}
         for (const row of geo.cityCategory || []) {
-          const path = `/${encodeURIComponent(row.city)}/${encodeURIComponent(row.category)}`;
-          urls.push(urlEntry(path, { changefreq: "weekly", priority: "0.75" }));
+          const [city, category] = typeof row === "string" ? row.split("/") : [row.city, row.category];
+          if (city && category) {
+            urls.push(urlEntry(`/${encodeURIComponent(city)}/${encodeURIComponent(category)}`, { changefreq: "weekly", priority: "0.75" }));
+          }
         }
         for (const row of geo.cityCategoryArea || []) {
-          const path = `/${encodeURIComponent(row.city)}/${encodeURIComponent(row.category)}/${encodeURIComponent(row.area)}`;
-          urls.push(urlEntry(path, { changefreq: "weekly", priority: "0.7" }));
+          const parts = typeof row === "string" ? row.split("/") : [row.city, row.category, row.area];
+          const [city, category, area] = parts;
+          if (city && category && area) {
+            urls.push(urlEntry(`/${encodeURIComponent(city)}/${encodeURIComponent(category)}/${encodeURIComponent(area)}`, { changefreq: "weekly", priority: "0.7" }));
+          }
         }
       }
     } catch {
