@@ -1,6 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,6 +39,8 @@ function isPdfUrl(url: string | null | undefined): boolean {
 }
 
 export default function AdminPage() {
+  const pathname = usePathname()
+  const allowedAdminPath = "/control-room-9x7k"
   const { toast } = useToast()
   const [password, setPassword] = useState("")
   const [authChecked, setAuthChecked] = useState(false)
@@ -54,6 +58,20 @@ export default function AdminPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
   const PAGE_SIZE = 10
+
+  if (pathname !== allowedAdminPath) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] w-full max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
+        <h1 className="text-2xl font-bold text-slate-900">Access blocked</h1>
+        <p className="text-sm text-slate-600">
+          This admin URL is disabled. Use the private admin route.
+        </p>
+        <Button asChild>
+          <Link href={allowedAdminPath}>Open admin</Link>
+        </Button>
+      </div>
+    )
+  }
 
   const fetchPending = useCallback(async () => {
     setListLoading(true)

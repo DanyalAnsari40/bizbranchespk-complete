@@ -388,6 +388,12 @@ function registerBusinessRoutes(Router $router): void {
 
             $insertId = (int)$pdo->lastInsertId();
 
+            Email::sendSubmissionReceived([
+                'name' => trim($data['name']),
+                'slug' => $uniqueSlug,
+                'email' => trim($data['email'] ?? ''),
+            ]);
+
             Response::json([
                 'ok' => true,
                 'id' => $insertId,

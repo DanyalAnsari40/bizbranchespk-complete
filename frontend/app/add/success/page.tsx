@@ -14,7 +14,7 @@
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, ExternalLink, PlusCircle, Home, Building2 } from "lucide-react"
+import { CheckCircle, PlusCircle, Home } from "lucide-react"
 import { AdSenseSlot } from "@/components/adsense-slot"
 import { SITE_NAME } from "@/lib/site"
 import { Suspense } from "react"
@@ -29,8 +29,6 @@ function getSuccessAdSlots() {
 
 function SuccessContent() {
   const searchParams = useSearchParams()
-  const slug = searchParams.get("slug")?.trim() || null
-  const name = searchParams.get("name")?.trim() || "Your business"
   const adSlots = getSuccessAdSlots()
 
   return (
@@ -42,18 +40,20 @@ function SuccessContent() {
             <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12 text-emerald-600" />
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            Listing submitted successfully
+            Your business has been registered successfully!
           </h1>
           <p className="text-gray-600 text-base sm:text-lg">
-            Your business is now live on {SITE_NAME}. Customers can find and contact you right away.
+            Thank you for your submission. Your listing is now under admin review and payment verification.
           </p>
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-800">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-            Live now
-          </div>
+          <p className="mt-4 text-sm font-semibold text-emerald-700">
+            It will go live within 6 hours after approval.
+          </p>
+          <p className="mt-2 text-sm text-gray-600">
+            You will receive a confirmation email once your listing is published.
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-700">
+            Your business will be featured as a premium listing and shown prominently on our homepage after approval.
+          </p>
         </section>
 
         {/* Ad placement 1 — above the fold, non-blocking */}
@@ -62,26 +62,6 @@ function SuccessContent() {
             <AdSenseSlot slotId="add-success-above-fold" adSlot={adSlots.aboveFold} className="my-0" />
           </div>
         </div>
-
-        {/* Listing preview card */}
-        {slug && (
-          <section className="mb-6 sm:mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-emerald-600" aria-hidden />
-              Your listing
-            </h2>
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
-              <p className="font-semibold text-gray-900 truncate">{name}</p>
-              <p className="text-sm text-gray-500 mt-0.5">Now visible on the directory</p>
-              <Button asChild className="mt-4 w-full sm:w-auto min-h-[44px] bg-emerald-600 hover:bg-emerald-700">
-                <Link href={`/${encodeURIComponent(slug)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2">
-                  View your listing
-                  <ExternalLink className="h-4 w-4" aria-hidden />
-                </Link>
-              </Button>
-            </div>
-          </section>
-        )}
 
         {/* Ad placement 2 — in-content */}
         <div className="my-6 sm:my-8" role="complementary" aria-label="Advertisement">
@@ -96,9 +76,9 @@ function SuccessContent() {
           <ul className="space-y-3">
             <li>
               <Button asChild variant="outline" className="w-full justify-start h-12 gap-3 rounded-xl" size="lg">
-                <Link href={slug ? `/${encodeURIComponent(slug)}` : "/search"}>
-                  <ExternalLink className="h-5 w-5 shrink-0" aria-hidden />
-                  {slug ? "View and share your listing" : "Browse the directory"}
+                <Link href="/search">
+                  <Home className="h-5 w-5 shrink-0" aria-hidden />
+                  Browse the directory
                 </Link>
               </Button>
             </li>

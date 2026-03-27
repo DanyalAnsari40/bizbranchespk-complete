@@ -722,7 +722,7 @@ export function AddBusinessForm({
               <ol className="list-decimal list-inside text-sm text-gray-700 space-y-1">
                 <li>Fill in your business name, category, city, and address.</li>
                 <li>Add contact details (phone, email, WhatsApp, website).</li>
-                <li>Upload payment proof (Rs. 399) and submit. Our team reviews and publishes within 6 hours.</li>
+                <li>Upload payment proof (Rs. 300) and submit. Our team reviews and publishes within 6 hours.</li>
               </ol>
             </section>
             <div className="mt-6 max-w-2xl mx-auto">
@@ -1284,7 +1284,7 @@ export function AddBusinessForm({
                         Payment & verification
                       </h3>
                       <p className="mt-1 text-sm text-gray-600 sm:text-base">
-                        Upload proof of your Rs.&nbsp;399 contribution and tell us who sent the payment.
+                        Upload proof of your Rs.&nbsp;300 contribution and tell us who sent the payment.
                       </p>
                     </div>
                   </div>
@@ -1419,7 +1419,7 @@ export function AddBusinessForm({
                           text: (
                             <>
                               To support our platform and maintain high-quality listings, a small contribution of{" "}
-                              <span className="font-semibold text-slate-900">Rs. 399</span> is required.
+                              <span className="font-semibold text-slate-900">Rs. 300</span> is required.
                             </>
                           ),
                         },
@@ -1485,7 +1485,7 @@ export function AddBusinessForm({
                         </div>
                         <div className="min-w-0 flex-1 space-y-3">
                           <h3 id="bank-transfer-heading" className="text-base font-bold text-slate-900 sm:text-lg">
-                            Pay via bank transfer (Rs.&nbsp;399)
+                            Pay via bank transfer (Rs.&nbsp;300)
                           </h3>
                           <p className="text-sm text-slate-600">
                             Send the listing fee to the account below, then upload your payment proof and submit the form.
