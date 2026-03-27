@@ -685,6 +685,9 @@ export function AddBusinessForm({
             else if (lower.includes("invalid") || lower.includes("validation")) userMessage = "Please fix the highlighted fields and try again."
             else userMessage = data.error
           }
+          if (res.status >= 500 && typeof data?.detail === "string" && data.detail.trim()) {
+            userMessage = data.detail
+          }
         } catch (_) {
           try {
             const text = await res.text()

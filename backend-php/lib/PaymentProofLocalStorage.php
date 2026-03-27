@@ -51,10 +51,17 @@ class PaymentProofLocalStorage {
             throw new InvalidArgumentException('Invalid upload');
         }
 
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime = $finfo ? finfo_file($finfo, $tmp) : '';
+        $mime = '';
+        $finfo = function_exists('finfo_open') ? finfo_open(FILEINFO_MIME_TYPE) : false;
         if ($finfo) {
+            $mime = (string)finfo_file($finfo, $tmp);
             finfo_close($finfo);
+        }
+        if ($mime === '' && function_exists('getimagesize')) {
+            $img = @getimagesize($tmp);
+            if ($img !== false && !empty($img['mime'])) {
+                $mime = (string)$img['mime'];
+            }
         }
         if ($mime === 'image/jpg') {
             $mime = 'image/jpeg';

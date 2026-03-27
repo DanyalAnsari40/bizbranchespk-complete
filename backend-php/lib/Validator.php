@@ -5,13 +5,13 @@ class Validator {
         $errors = [];
 
         if (empty(trim($data['name'] ?? ''))) $errors[] = ['path' => ['name'], 'message' => 'Business name is required'];
-        elseif (mb_strlen($data['name']) > 100) $errors[] = ['path' => ['name'], 'message' => 'Name too long'];
+        elseif (Str::len($data['name']) > 100) $errors[] = ['path' => ['name'], 'message' => 'Name too long'];
 
         if (empty(trim($data['category'] ?? ''))) $errors[] = ['path' => ['category'], 'message' => 'Category is required'];
         if (empty(trim($data['country'] ?? ''))) $errors[] = ['path' => ['country'], 'message' => 'Country is required'];
         if (empty(trim($data['city'] ?? ''))) $errors[] = ['path' => ['city'], 'message' => 'City is required'];
         if (empty(trim($data['address'] ?? ''))) $errors[] = ['path' => ['address'], 'message' => 'Address is required'];
-        elseif (mb_strlen($data['address']) > 500) $errors[] = ['path' => ['address'], 'message' => 'Address too long'];
+        elseif (Str::len($data['address']) > 500) $errors[] = ['path' => ['address'], 'message' => 'Address too long'];
 
         if (empty(trim($data['phone'] ?? ''))) $errors[] = ['path' => ['phone'], 'message' => 'Phone number is required'];
         if (empty(trim($data['whatsapp'] ?? ''))) $errors[] = ['path' => ['whatsapp'], 'message' => 'WhatsApp number is required'];
@@ -20,8 +20,8 @@ class Validator {
         }
 
         $desc = trim($data['description'] ?? '');
-        if (mb_strlen($desc) < 500) $errors[] = ['path' => ['description'], 'message' => 'Description must be at least 500 characters'];
-        elseif (mb_strlen($desc) > 2000) $errors[] = ['path' => ['description'], 'message' => 'Description too long'];
+        if (Str::len($desc) < 500) $errors[] = ['path' => ['description'], 'message' => 'Description must be at least 500 characters'];
+        elseif (Str::len($desc) > 2000) $errors[] = ['path' => ['description'], 'message' => 'Description too long'];
 
         // Pakistan phone validation
         $phoneDig = preg_replace('/\D/', '', $data['phone'] ?? '');
@@ -48,14 +48,14 @@ class Validator {
             }
         }
 
-        if (!empty($data['postalCode']) && (mb_strlen($data['postalCode']) < 3 || mb_strlen($data['postalCode']) > 12)) {
+        if (!empty($data['postalCode']) && (Str::len($data['postalCode']) < 3 || Str::len($data['postalCode']) > 12)) {
             $errors[] = ['path' => ['postalCode'], 'message' => 'Postal code must be 3-12 characters'];
         }
 
         $sender = trim($data['senderName'] ?? '');
         if ($sender === '') {
             $errors[] = ['path' => ['senderName'], 'message' => 'Sender name is required'];
-        } elseif (mb_strlen($sender) > 255) {
+        } elseif (Str::len($sender) > 255) {
             $errors[] = ['path' => ['senderName'], 'message' => 'Sender name is too long'];
         }
 
@@ -66,14 +66,14 @@ class Validator {
         $errors = [];
         if (empty(trim($data['businessId'] ?? ''))) $errors[] = ['path' => ['businessId'], 'message' => 'businessId is required'];
         if (empty(trim($data['name'] ?? ''))) $errors[] = ['path' => ['name'], 'message' => 'Name is required'];
-        elseif (mb_strlen($data['name']) > 100) $errors[] = ['path' => ['name'], 'message' => 'Name too long'];
+        elseif (Str::len($data['name']) > 100) $errors[] = ['path' => ['name'], 'message' => 'Name too long'];
 
         $rating = (int)($data['rating'] ?? 0);
         if ($rating < 1 || $rating > 5) $errors[] = ['path' => ['rating'], 'message' => 'Rating must be between 1 and 5'];
 
         $comment = trim($data['comment'] ?? '');
-        if (mb_strlen($comment) < 3) $errors[] = ['path' => ['comment'], 'message' => 'Please add a bit more detail'];
-        elseif (mb_strlen($comment) > 1000) $errors[] = ['path' => ['comment'], 'message' => 'Comment too long'];
+        if (Str::len($comment) < 3) $errors[] = ['path' => ['comment'], 'message' => 'Please add a bit more detail'];
+        elseif (Str::len($comment) > 1000) $errors[] = ['path' => ['comment'], 'message' => 'Comment too long'];
 
         return $errors;
     }

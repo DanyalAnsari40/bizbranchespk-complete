@@ -386,8 +386,21 @@ function registerBusinessRoutes(Router $router): void {
                 'status' => 'pending',
                 'business' => ['id' => $insertId, 'slug' => $uniqueSlug, 'name' => trim($data['name']), 'status' => 'pending'],
             ], 201);
-        } catch (Exception $e) {
-            Logger::error('Business creation error:', $e->getMessage());
+        } catch (Throwable $e) {
+            Logger::error(
+                'Business creation error: ' . $e->getMessage(),
+                $e->getFile() . ':' . $e->getLine()
+            );
+            $debug = env('APP_DEBUG', '') === '1'
+                || env('APP_DEBUG', '') === 'true'
+                || env('APP_ENV', '') === 'local'
+                || env('APP_ENV', '') === 'development';
+            if ($debug) {
+                Response::error('Internal server error.', 500, [
+                    'detail' => $e->getMessage(),
+                    'where' => basename($e->getFile()) . ':' . $e->getLine(),
+                ]);
+            }
             Response::error('Internal server error.', 500);
         }
     });

@@ -4,7 +4,7 @@ function registerSearchRoutes(Router $router): void {
     $router->get('/api/search', function($params) {
         try {
             $raw = trim($_GET['q'] ?? '');
-            if (mb_strlen($raw) < 2) {
+            if (Str::len($raw) < 2) {
                 Response::success(['businesses' => [], 'categories' => []]);
                 return;
             }

@@ -6,7 +6,7 @@ class Sanitize {
     }
 
     public static function safeSearchQuery(string $input): string {
-        $trimmed = trim(mb_substr($input, 0, 200));
+        $trimmed = trim(Str::substr($input, 0, 200));
         return self::escapeRegex($trimmed);
     }
 

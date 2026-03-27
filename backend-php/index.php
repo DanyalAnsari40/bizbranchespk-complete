@@ -7,6 +7,7 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/lib/Logger.php';
 require_once __DIR__ . '/lib/Response.php';
 require_once __DIR__ . '/lib/Router.php';
+require_once __DIR__ . '/lib/Str.php';
 require_once __DIR__ . '/lib/Sanitize.php';
 require_once __DIR__ . '/lib/RateLimit.php';
 require_once __DIR__ . '/lib/Geo.php';
