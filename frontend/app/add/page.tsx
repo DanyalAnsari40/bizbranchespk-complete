@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { ChevronsUpDown, MapPin, Building, User, Phone, Mail, MessageSquare, Globe, Camera, CheckCircle, Upload, Star, Shield, Zap, Receipt, FileText, AlertTriangle } from "lucide-react"
+import { ChevronsUpDown, MapPin, Building, User, Phone, Mail, MessageSquare, Globe, Camera, CheckCircle, Upload, Star, Shield, Zap, Receipt, FileText, AlertTriangle, Landmark } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -1424,6 +1424,39 @@ export function AddBusinessForm({
                 {/* Submit Button — prominent green CTA like home page */}
                 <div className="p-8 sm:p-10 bg-gradient-to-b from-slate-50 to-white border-t border-gray-100">
                   <div className="max-w-2xl mx-auto text-center">
+                    <div
+                      className="mb-8 rounded-2xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50/90 to-white p-5 text-left shadow-sm sm:p-6"
+                      role="region"
+                      aria-labelledby="bank-transfer-heading"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
+                          <Landmark className="h-5 w-5" aria-hidden />
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-3">
+                          <h3 id="bank-transfer-heading" className="text-base font-bold text-slate-900 sm:text-lg">
+                            Pay via bank transfer (Rs.&nbsp;399)
+                          </h3>
+                          <p className="text-sm text-slate-600">
+                            Send the listing fee to the account below, then upload your payment proof and submit the form.
+                          </p>
+                          <dl className="space-y-2 text-sm sm:text-base">
+                            <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+                              <dt className="font-semibold text-slate-700 sm:min-w-[7.5rem]">Bank</dt>
+                              <dd className="text-slate-900">Meezan Bank</dd>
+                            </div>
+                            <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+                              <dt className="font-semibold text-slate-700 sm:min-w-[7.5rem]">Account number</dt>
+                              <dd className="font-mono text-slate-900 tabular-nums tracking-wide">05810111165029</dd>
+                            </div>
+                            <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+                              <dt className="font-semibold text-slate-700 sm:min-w-[7.5rem]">Account title</dt>
+                              <dd className="text-slate-900">Digital Skills House</dd>
+                            </div>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
                     <Button
                       type="submit"
                       className="w-full sm:w-auto min-h-[52px] sm:min-h-[56px] px-8 sm:px-12 py-4 text-base sm:text-lg font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:pointer-events-none disabled:opacity-50"
