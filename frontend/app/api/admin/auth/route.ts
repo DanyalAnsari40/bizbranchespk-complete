@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { getAdminSessionToken } from "@/lib/admin-session"
+import { getAdminSessionToken } from "@/lib/admin-session-token"
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 export async function GET() {
   const cookieStore = await cookies()

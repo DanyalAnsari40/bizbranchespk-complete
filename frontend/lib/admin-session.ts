@@ -1,12 +1,7 @@
-import crypto from "crypto"
 import { cookies } from "next/headers"
+import { getAdminSessionToken } from "@/lib/admin-session-token"
 
-/** Stable session value derived from server env (not stored per-login). */
-export function getAdminSessionToken(): string {
-  const secret = process.env.ADMIN_SECRET ?? ""
-  const pass = process.env.ADMIN_PANEL_PASSWORD ?? process.env.ADMIN_SECRET ?? ""
-  return crypto.createHmac("sha256", secret).update("bizbranches-admin:" + pass).digest("hex")
-}
+export { getAdminSessionToken } from "@/lib/admin-session-token"
 
 export async function verifyAdminSession(): Promise<boolean> {
   const cookieStore = await cookies()

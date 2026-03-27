@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import { getBackendUrl } from "@/lib/api"
 import { verifyAdminSession } from "@/lib/admin-session"
 
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
 export async function POST(request: Request) {
   if (!(await verifyAdminSession())) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
