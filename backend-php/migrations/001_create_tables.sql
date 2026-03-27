@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS businesses (
     logo_url VARCHAR(500) DEFAULT NULL,
     logo_public_id VARCHAR(200) DEFAULT NULL,
     payment_proof_url TEXT DEFAULT NULL,
+    payment_proof_public_id VARCHAR(255) DEFAULT NULL,
+    payment_proof_verified_at DATETIME DEFAULT NULL,
     sender_name VARCHAR(255) DEFAULT NULL,
     status ENUM('pending','approved') NOT NULL DEFAULT 'pending',
     approved_at DATETIME DEFAULT NULL,

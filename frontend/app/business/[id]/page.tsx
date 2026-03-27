@@ -53,11 +53,6 @@ export default function BusinessDetailPage({
   const [showFullDescription, setShowFullDescription] = useState(false)
   const { toast } = useToast()
 
-  // Client-safe API base: relative /api works when frontend and API share origin; use env when set
-  const apiBase = typeof window !== "undefined"
-    ? (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "") || ""
-    : ""
-
   useEffect(() => {
     const fetchBusiness = async () => {
       if (initialBusiness) return
@@ -66,9 +61,8 @@ export default function BusinessDetailPage({
       try {
         setLoading(true)
         setBusiness(null)
-        const url = apiBase
-          ? `${apiBase}/api/business/${encodeURIComponent(businessId)}`
-          : `/api/business/${encodeURIComponent(businessId)}`
+        // Always use same-origin API path in browser to satisfy CSP.
+        const url = `/api/business/${encodeURIComponent(businessId)}`
         const response = await fetch(url)
         const data = await response.json().catch(() => ({}))
         if (response.ok && data?.business != null && data?.ok !== false) {
@@ -87,7 +81,7 @@ export default function BusinessDetailPage({
     if (businessId && !initialBusiness) {
       fetchBusiness()
     }
-  }, [businessId, initialBusiness, apiBase])
+  }, [businessId, initialBusiness])
 
   // Fetch existing reviews
   useEffect(() => {

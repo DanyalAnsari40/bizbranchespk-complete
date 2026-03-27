@@ -13,6 +13,8 @@ function addSecurityHeaders(res: NextResponse, req: NextRequest) {
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const configuredAdminPathRaw = (process.env.NEXT_PUBLIC_ADMIN_PATH || "/control-room-9x7k").trim()
+  const configuredAdminPath = configuredAdminPathRaw.startsWith("/") ? configuredAdminPathRaw : `/${configuredAdminPathRaw}`
 
   if (pathname.startsWith('/_next') || pathname.startsWith('/static') || /\.[a-zA-Z0-9]+$/.test(pathname)) {
     return NextResponse.next()
@@ -21,6 +23,16 @@ export function middleware(req: NextRequest) {
     const res = NextResponse.next()
     addSecurityHeaders(res, req)
     return res
+  }
+
+  // Hide default admin URL from public discovery.
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    return NextResponse.redirect(new URL('/', req.url), 307)
+  }
+
+  // If someone hits the configured path with trailing slash variants, normalize it.
+  if (pathname !== configuredAdminPath && pathname.replace(/\/+$/, '') === configuredAdminPath) {
+    return NextResponse.redirect(new URL(configuredAdminPath, req.url), 307)
   }
 
   const directBusiness = pathname.match(/^\/business\/([^\/]+)\/?$/i)

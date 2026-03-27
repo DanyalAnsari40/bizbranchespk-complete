@@ -298,14 +298,22 @@ function registerBusinessRoutes(Router $router): void {
                 Response::error('Validation failed', 400, ['details' => [['path' => ['paymentProof'], 'message' => 'Payment proof must be 2MB or smaller']]]);
             }
 
-            // Save payment proof locally (testing); before geocode, duplicate checks, or DB insert
+            // Upload payment proof to Cloudinary so admin can verify, then delete on approval.
+            // If Cloudinary is temporarily unavailable, fall back to local storage to avoid blocking submissions.
+            $paymentProofUrl = null;
+            $paymentProofPublicId = null;
             try {
-                $paymentProofUrl = PaymentProofLocalStorage::save($_FILES['paymentProof']);
-            } catch (InvalidArgumentException $e) {
-                Response::error('Validation failed', 400, ['details' => [['path' => ['paymentProof'], 'message' => $e->getMessage()]]]);
+                $uploadedProof = CloudinaryHelper::uploadPaymentProof($_FILES['paymentProof']['tmp_name']);
+                if ($uploadedProof && !empty($uploadedProof['url'])) {
+                    $paymentProofUrl = (string)$uploadedProof['url'];
+                    $paymentProofPublicId = trim((string)($uploadedProof['public_id'] ?? '')) ?: null;
+                } else {
+                    $paymentProofUrl = PaymentProofLocalStorage::save($_FILES['paymentProof']);
+                    $paymentProofPublicId = null;
+                }
             } catch (Throwable $e) {
-                Logger::error('Payment proof save failed:', $e->getMessage());
-                Response::error('Could not save payment proof.', 500);
+                Logger::error('Payment proof upload failed:', $e->getMessage());
+                Response::error('Could not upload payment proof.', 500);
             }
 
             $latitude = isset($data['latitude']) ? (float)$data['latitude'] : null;
@@ -358,9 +366,7 @@ function registerBusinessRoutes(Router $router): void {
             $normalized = DuplicateCheck::getNormalizedForInsert(trim($data['phone']), trim($data['websiteUrl'] ?? ''));
             $now = date('Y-m-d H:i:s');
 
-            $stmt = $pdo->prepare("INSERT INTO businesses (name, slug, category, sub_category, country, province, city, area, postal_code, address, phone, phone_digits, contact_person, whatsapp, email, description, website_url, website_normalized, facebook_url, gmb_url, youtube_url, profile_username, swift_code, branch_code, city_dialing_code, iban, logo_url, logo_public_id, payment_proof_url, sender_name, status, approved_at, approved_by, featured, latitude, longitude, location_verified, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-
-            $stmt->execute([
+            $insertValues = [
                 trim($data['name']), $uniqueSlug, trim($data['category']), trim($data['subCategory'] ?? '') ?: null,
                 trim($data['country']), trim($data['province'] ?? '') ?: null, trim($data['city']),
                 trim($data['area'] ?? '') ?: null, trim($data['postalCode'] ?? '') ?: null,
@@ -372,10 +378,13 @@ function registerBusinessRoutes(Router $router): void {
                 trim($data['youtubeUrl'] ?? '') ?: null, trim($data['profileUsername'] ?? '') ?: null,
                 trim($data['swiftCode'] ?? '') ?: null, trim($data['branchCode'] ?? '') ?: null,
                 trim($data['cityDialingCode'] ?? '') ?: null, trim($data['iban'] ?? '') ?: null,
-                $logoUrl, $logoPublicId, $paymentProofUrl, trim($data['senderName']),
+                $logoUrl, $logoPublicId, $paymentProofUrl, $paymentProofPublicId, null, trim($data['senderName']),
                 'pending', null, null, 0, $latitude, $longitude,
                 $locationVerified ? 1 : 0, $now,
-            ]);
+            ];
+            $placeholders = implode(',', array_fill(0, count($insertValues), '?'));
+            $stmt = $pdo->prepare("INSERT INTO businesses (name, slug, category, sub_category, country, province, city, area, postal_code, address, phone, phone_digits, contact_person, whatsapp, email, description, website_url, website_normalized, facebook_url, gmb_url, youtube_url, profile_username, swift_code, branch_code, city_dialing_code, iban, logo_url, logo_public_id, payment_proof_url, payment_proof_public_id, payment_proof_verified_at, sender_name, status, approved_at, approved_by, featured, latitude, longitude, location_verified, created_at) VALUES ($placeholders)");
+            $stmt->execute($insertValues);
 
             $insertId = (int)$pdo->lastInsertId();
 
@@ -469,15 +478,15 @@ function enrichBusinessRow(array $row): array {
         'iban' => $row['iban'] ?? null,
         'logoUrl' => $row['logoUrl'] ?? $row['logo_url'] ?? null,
         'logoPublicId' => $row['logo_public_id'] ?? null,
-        'status' => $row['status'],
+        'status' => $row['status'] ?? null,
         'approvedAt' => $row['approved_at'] ?? null,
         'approvedBy' => $row['approved_by'] ?? null,
         'featured' => (bool)($row['featured'] ?? false),
         'featuredAt' => $row['featured_at'] ?? null,
         'ratingAvg' => (float)($row['rating_avg'] ?? 0),
         'ratingCount' => (int)($row['rating_count'] ?? 0),
-        'latitude' => $row['latitude'] !== null ? (float)$row['latitude'] : null,
-        'longitude' => $row['longitude'] !== null ? (float)$row['longitude'] : null,
+        'latitude' => ($row['latitude'] ?? null) !== null ? (float)$row['latitude'] : null,
+        'longitude' => ($row['longitude'] ?? null) !== null ? (float)$row['longitude'] : null,
         'locationVerified' => (bool)($row['location_verified'] ?? false),
         'createdAt' => $row['created_at'] ?? null,
         'updatedAt' => $row['updated_at'] ?? null,

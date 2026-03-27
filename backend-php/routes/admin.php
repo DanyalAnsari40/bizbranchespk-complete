@@ -46,7 +46,7 @@ function registerAdminRoutes(Router $router): void {
         try {
             $pdo = db();
             $stmt = $pdo->query(
-                "SELECT id, name, sender_name, payment_proof_url, created_at FROM businesses WHERE status = 'pending' ORDER BY created_at ASC"
+                "SELECT id, name, category, city, phone, whatsapp, email, address, description, website_url, facebook_url, gmb_url, youtube_url, sender_name, payment_proof_url, payment_proof_public_id, payment_proof_verified_at, created_at FROM businesses WHERE status = 'pending' ORDER BY created_at ASC"
             );
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -61,6 +61,168 @@ function registerAdminRoutes(Router $router): void {
         } catch (Exception $e) {
             Logger::error('Error fetching admin pending businesses:', $e->getMessage());
             Response::error('Failed to fetch pending businesses.', 500);
+        }
+    });
+
+    // GET /api/admin/business/list?status=pending|approved|all — listings for admin management
+    $router->get('/api/admin/business/list', function($params) {
+        if (!env('ADMIN_SECRET')) Response::error('Missing ADMIN_SECRET', 500);
+        if (!admin_api_authorized()) Response::error('Unauthorized', 401);
+
+        $status = strtolower(trim((string)($_GET['status'] ?? 'pending')));
+        if (!in_array($status, ['pending', 'approved', 'all'], true)) {
+            Response::error('Invalid status filter', 400);
+        }
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $limit = (int)($_GET['limit'] ?? 10);
+        if ($limit <= 0) $limit = 10;
+        if ($limit > 100) $limit = 100;
+        $offset = ($page - 1) * $limit;
+
+        try {
+            $pdo = db();
+            $where = "";
+            $bind = [];
+            if ($status === 'pending' || $status === 'approved') {
+                $where = " WHERE status = ?";
+                $bind[] = $status;
+            }
+
+            $countStmt = $pdo->prepare("SELECT COUNT(*) FROM businesses" . $where);
+            $countStmt->execute($bind);
+            $total = (int)$countStmt->fetchColumn();
+
+            $sql = "SELECT id, name, status, category, city, phone, whatsapp, email, address, description, website_url, facebook_url, gmb_url, youtube_url, sender_name, payment_proof_url, payment_proof_public_id, payment_proof_verified_at, created_at FROM businesses" . $where . " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+            $queryBind = $bind;
+            $queryBind[] = $limit;
+            $queryBind[] = $offset;
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($queryBind);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($rows as &$row) {
+                if (isset($row['payment_proof_url'])) {
+                    $row['payment_proof_url'] = payment_proof_url_for_display($row['payment_proof_url']);
+                }
+            }
+            unset($row);
+
+            Response::success([
+                'businesses' => $rows,
+                'status' => $status,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => $total,
+                    'pages' => (int)ceil($total / $limit),
+                ],
+            ]);
+        } catch (Exception $e) {
+            Logger::error('Error fetching admin business list:', $e->getMessage());
+            Response::error('Failed to fetch businesses.', 500);
+        }
+    });
+
+    // POST /api/admin/business/update — edit selected fields for a listing
+    $router->post('/api/admin/business/update', function($params) {
+        if (!env('ADMIN_SECRET')) Response::error('Missing ADMIN_SECRET', 500);
+        if (!admin_api_authorized()) Response::error('Unauthorized', 401);
+
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $id = (int)trim((string)($body['id'] ?? ''));
+        if ($id <= 0) Response::error('Valid id is required', 400);
+
+        $allowed = [
+            'name' => 'name',
+            'category' => 'category',
+            'city' => 'city',
+            'phone' => 'phone',
+            'whatsapp' => 'whatsapp',
+            'email' => 'email',
+            'address' => 'address',
+            'description' => 'description',
+            'website_url' => 'website_url',
+            'facebook_url' => 'facebook_url',
+            'gmb_url' => 'gmb_url',
+            'youtube_url' => 'youtube_url',
+            'sender_name' => 'sender_name',
+        ];
+
+        $sets = [];
+        $bind = [];
+        foreach ($allowed as $inputKey => $column) {
+            if (!array_key_exists($inputKey, $body)) continue;
+            $val = is_string($body[$inputKey]) ? trim($body[$inputKey]) : $body[$inputKey];
+            if ($val === '') $val = null;
+            $sets[] = "{$column} = ?";
+            $bind[] = $val;
+        }
+
+        if (empty($sets)) {
+            Response::error('No editable fields provided', 400);
+        }
+
+        try {
+            $pdo = db();
+            $bind[] = $id;
+            $sql = "UPDATE businesses SET " . implode(', ', $sets) . ", updated_at = NOW() WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($bind);
+            if ($stmt->rowCount() === 0) {
+                Response::error('Business not found or no changes applied', 404);
+            }
+            Response::success(['id' => $id, 'message' => 'Business updated']);
+        } catch (Exception $e) {
+            Logger::error('Error updating business:', $e->getMessage());
+            Response::error('Failed to update business.', 500);
+        }
+    });
+
+    // POST /api/admin/business/delete — delete one listing
+    $router->post('/api/admin/business/delete', function($params) {
+        if (!env('ADMIN_SECRET')) Response::error('Missing ADMIN_SECRET', 500);
+        if (!admin_api_authorized()) Response::error('Unauthorized', 401);
+
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $id = (int)trim((string)($body['id'] ?? ''));
+        if ($id <= 0) Response::error('Valid id is required', 400);
+
+        try {
+            $pdo = db();
+            $sel = $pdo->prepare("SELECT payment_proof_url, payment_proof_public_id FROM businesses WHERE id = ?");
+            $sel->execute([$id]);
+            $row = $sel->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                Response::error('Business not found', 404);
+            }
+
+            $del = $pdo->prepare("DELETE FROM businesses WHERE id = ?");
+            $del->execute([$id]);
+            if ($del->rowCount() === 0) {
+                Response::error('Business not found', 404);
+            }
+
+            $proofPublicId = trim((string)($row['payment_proof_public_id'] ?? ''));
+            if ($proofPublicId !== '') {
+                CloudinaryHelper::deleteAsset($proofPublicId, 'image') || CloudinaryHelper::deleteAsset($proofPublicId, 'raw');
+            }
+
+            $stored = (string)($row['payment_proof_url'] ?? '');
+            if (str_starts_with($stored, '/uploads/payment-proofs/')) {
+                $filename = basename($stored);
+                if (preg_match('/^[0-9]+_[a-f0-9]+\.(jpg|png)$/i', $filename)) {
+                    $path = dirname(__DIR__) . '/uploads/payment-proofs/' . $filename;
+                    if (is_file($path)) {
+                        @unlink($path);
+                    }
+                }
+            }
+
+            Response::success(['id' => $id, 'message' => 'Business deleted']);
+        } catch (Exception $e) {
+            Logger::error('Error deleting business:', $e->getMessage());
+            Response::error('Failed to delete business.', 500);
         }
     });
 
@@ -85,11 +247,27 @@ function registerAdminRoutes(Router $router): void {
                 Response::error('Pending business not found', 404);
             }
 
+            $proofPublicId = trim((string)($row['payment_proof_public_id'] ?? ''));
+            if ($proofPublicId !== '') {
+                CloudinaryHelper::deleteAsset($proofPublicId, 'image') || CloudinaryHelper::deleteAsset($proofPublicId, 'raw');
+            }
+
+            $stored = (string)($row['payment_proof_url'] ?? '');
+            if (str_starts_with($stored, '/uploads/payment-proofs/')) {
+                $filename = basename($stored);
+                if (preg_match('/^[0-9]+_[a-f0-9]+\.(jpg|png)$/i', $filename)) {
+                    $path = dirname(__DIR__) . '/uploads/payment-proofs/' . $filename;
+                    if (is_file($path)) {
+                        @unlink($path);
+                    }
+                }
+            }
+
             $now = date('Y-m-d H:i:s');
             $upd = $pdo->prepare(
-                "UPDATE businesses SET status = 'approved', approved_at = ?, approved_by = 'admin', updated_at = NOW() WHERE id = ? AND status = 'pending'"
+                "UPDATE businesses SET status = 'approved', approved_at = ?, approved_by = 'admin', payment_proof_verified_at = ?, payment_proof_url = NULL, payment_proof_public_id = NULL, updated_at = NOW() WHERE id = ? AND status = 'pending'"
             );
-            $upd->execute([$now, $id]);
+            $upd->execute([$now, $now, $id]);
             if ($upd->rowCount() === 0) {
                 $pdo->rollBack();
                 Response::error('Could not approve listing', 409);

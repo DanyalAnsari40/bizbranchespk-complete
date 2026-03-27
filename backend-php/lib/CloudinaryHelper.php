@@ -1,6 +1,10 @@
 <?php
 
 class CloudinaryHelper {
+    private static function hasConfig(): bool {
+        return (bool)(env('CLOUDINARY_CLOUD_NAME') && env('CLOUDINARY_API_KEY') && env('CLOUDINARY_API_SECRET'));
+    }
+
     public static function buildCdnUrl(?string $publicId): ?string {
         if (!$publicId || !env('CLOUDINARY_CLOUD_NAME')) return null;
         if (str_starts_with($publicId, 'http')) return $publicId;
@@ -46,10 +50,11 @@ class CloudinaryHelper {
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
         curl_close($ch);
 
         if ($httpCode !== 200 || !$response) {
-            Logger::error('Cloudinary upload failed:', (string)$httpCode);
+            Logger::error('Cloudinary upload failed:', (string)$httpCode, $curlErr);
             return null;
         }
 
@@ -66,6 +71,7 @@ class CloudinaryHelper {
      * Upload payment proof: images via image API; PDF via raw upload.
      */
     public static function uploadPaymentProof(string $tmpFile): ?array {
+        if (!self::hasConfig()) return null;
         if (!is_readable($tmpFile)) return null;
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mime = $finfo ? finfo_file($finfo, $tmpFile) : '';
@@ -114,10 +120,11 @@ class CloudinaryHelper {
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
         curl_close($ch);
 
         if ($httpCode !== 200 || !$response) {
-            Logger::error('Cloudinary payment image upload failed:', (string)$httpCode);
+            Logger::error('Cloudinary payment image upload failed:', (string)$httpCode, $curlErr);
             return null;
         }
 
@@ -162,10 +169,11 @@ class CloudinaryHelper {
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
         curl_close($ch);
 
         if ($httpCode !== 200 || !$response) {
-            Logger::error('Cloudinary raw upload failed:', (string)$httpCode);
+            Logger::error('Cloudinary raw upload failed:', (string)$httpCode, $curlErr);
             return null;
         }
 
@@ -176,5 +184,49 @@ class CloudinaryHelper {
             'url' => $data['secure_url'],
             'public_id' => $data['public_id'] ?? null,
         ];
+    }
+
+    public static function deleteAsset(?string $publicId, string $resourceType = 'image'): bool {
+        $publicId = trim((string)$publicId);
+        if ($publicId === '' || !self::hasConfig()) return false;
+
+        $cloudName = env('CLOUDINARY_CLOUD_NAME');
+        $apiKey = env('CLOUDINARY_API_KEY');
+        $apiSecret = env('CLOUDINARY_API_SECRET');
+        $timestamp = time();
+
+        $paramsToSign = "public_id=$publicId&timestamp=$timestamp";
+        $signature = sha1($paramsToSign . $apiSecret);
+        $url = "https://api.cloudinary.com/v1_1/$cloudName/$resourceType/destroy";
+
+        $postFields = [
+            'public_id' => $publicId,
+            'timestamp' => $timestamp,
+            'invalidate' => 'true',
+            'api_key' => $apiKey,
+            'signature' => $signature,
+        ];
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $postFields,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 30,
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+
+        if ($httpCode !== 200 || !$response) {
+            Logger::error('Cloudinary delete failed:', (string)$httpCode, $publicId, $curlErr);
+            return false;
+        }
+
+        $data = json_decode($response, true);
+        $result = (string)($data['result'] ?? '');
+        return $result === 'ok' || $result === 'not found';
     }
 }

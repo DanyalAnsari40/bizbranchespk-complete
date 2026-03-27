@@ -1,5 +1,7 @@
 const isProd = process.env.NODE_ENV === "production";
 const isStaticExport = !!process.env.NEXT_PUBLIC_STATIC_EXPORT;
+const adminPathRaw = (process.env.NEXT_PUBLIC_ADMIN_PATH || "/control-room-9x7k").trim();
+const adminPath = adminPathRaw.startsWith("/") ? adminPathRaw : `/${adminPathRaw}`;
 
 const nextConfig = {
   ...(isStaticExport ? { output: "export" } : {}),
@@ -28,10 +30,12 @@ const nextConfig = {
     },
     async rewrites() {
       const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-      return [
+      const routes = [
+        ...(adminPath !== '/admin' ? [{ source: adminPath, destination: '/admin' }] : []),
         { source: '/api/:path*', destination: `${backendUrl}/api/:path*` },
         { source: '/uploads/:path*', destination: `${backendUrl}/uploads/:path*` },
       ]
+      return routes
     },
   }),
 }
