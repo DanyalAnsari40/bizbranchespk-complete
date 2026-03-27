@@ -31,6 +31,18 @@ function isProd(): bool {
     return env('NODE_ENV', '') === 'production' || env('APP_ENV', '') === 'production';
 }
 
+/** Absolute URL for stored payment proof path (or pass-through if already absolute). */
+function payment_proof_url_for_display(?string $stored): ?string {
+    if ($stored === null || trim($stored) === '') {
+        return null;
+    }
+    if (preg_match('#^https?://#i', $stored)) {
+        return $stored;
+    }
+    $base = rtrim((string)env('SITE_URL', env('BACKEND_URL', 'http://localhost:3002')), '/');
+    return $base . $stored;
+}
+
 // Load .env (api/.env on cPanel, or root .env for local dev)
 loadEnv(__DIR__ . '/../.env');
 loadEnv(__DIR__ . '/../../.env');

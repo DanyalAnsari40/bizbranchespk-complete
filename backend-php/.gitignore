@@ -2,3 +2,5 @@ vendor/
 .env
 *.log
 scripts/mongo_id_map.json
+uploads/payment-proofs/*
+!uploads/payment-proofs/.gitkeep

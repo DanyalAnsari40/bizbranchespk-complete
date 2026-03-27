@@ -17,6 +17,7 @@ require_once __DIR__ . '/lib/Email.php';
 require_once __DIR__ . '/lib/GooglePing.php';
 require_once __DIR__ . '/lib/Courier.php';
 require_once __DIR__ . '/lib/Validator.php';
+require_once __DIR__ . '/lib/PaymentProofLocalStorage.php';
 
 // Load PHPMailer if available via composer
 $autoload = __DIR__ . '/vendor/autoload.php';
@@ -49,10 +50,12 @@ require_once __DIR__ . '/routes/sitemap_api.php';
 require_once __DIR__ . '/routes/db_health.php';
 require_once __DIR__ . '/routes/debug.php';
 require_once __DIR__ . '/routes/profile.php';
+require_once __DIR__ . '/routes/uploads.php';
 
 $router = new Router();
 
 // Register all routes (order matters: specific routes before parameterized ones)
+registerUploadRoutes($router);
 registerBusinessRelatedRoutes($router); // /api/business/related before /api/business/{slug}
 registerBusinessRoutes($router);
 registerCategoriesRoutes($router);

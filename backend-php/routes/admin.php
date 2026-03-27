@@ -1,6 +1,104 @@
 <?php
 
 function registerAdminRoutes(Router $router): void {
+    // GET /api/admin/business/pending — listings awaiting approval (requires ADMIN_SECRET)
+    $router->get('/api/admin/business/pending', function($params) {
+        $adminSecret = env('ADMIN_SECRET');
+        if (!$adminSecret) Response::error('Missing ADMIN_SECRET', 500);
+
+        $bearer = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $headerSecret = $_SERVER['HTTP_X_ADMIN_SECRET'] ?? '';
+        if (!$headerSecret && str_starts_with($bearer, 'Bearer ')) {
+            $headerSecret = substr($bearer, 7);
+        }
+        if ($headerSecret !== $adminSecret) Response::error('Unauthorized', 401);
+
+        try {
+            $pdo = db();
+            $stmt = $pdo->query(
+                "SELECT id, name, sender_name, payment_proof_url, created_at FROM businesses WHERE status = 'pending' ORDER BY created_at ASC"
+            );
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($rows as &$row) {
+                if (isset($row['payment_proof_url'])) {
+                    $row['payment_proof_url'] = payment_proof_url_for_display($row['payment_proof_url']);
+                }
+            }
+            unset($row);
+
+            Response::success(['businesses' => $rows]);
+        } catch (Exception $e) {
+            Logger::error('Error fetching admin pending businesses:', $e->getMessage());
+            Response::error('Failed to fetch pending businesses.', 500);
+        }
+    });
+
+    // POST /api/admin/business/approve — approve one pending listing
+    $router->post('/api/admin/business/approve', function($params) {
+        $adminSecret = env('ADMIN_SECRET');
+        if (!$adminSecret) Response::error('Missing ADMIN_SECRET', 500);
+
+        $bearer = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $headerSecret = $_SERVER['HTTP_X_ADMIN_SECRET'] ?? '';
+        if (!$headerSecret && str_starts_with($bearer, 'Bearer ')) {
+            $headerSecret = substr($bearer, 7);
+        }
+        if ($headerSecret !== $adminSecret) Response::error('Unauthorized', 401);
+
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $id = (int)trim($body['id'] ?? '');
+        if ($id <= 0) Response::error('Valid id is required', 400);
+
+        try {
+            $pdo = db();
+            $pdo->beginTransaction();
+
+            $sel = $pdo->prepare("SELECT * FROM businesses WHERE id = ? AND status = 'pending' FOR UPDATE");
+            $sel->execute([$id]);
+            $row = $sel->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                $pdo->rollBack();
+                Response::error('Pending business not found', 404);
+            }
+
+            $now = date('Y-m-d H:i:s');
+            $upd = $pdo->prepare(
+                "UPDATE businesses SET status = 'approved', approved_at = ?, approved_by = 'admin', updated_at = NOW() WHERE id = ? AND status = 'pending'"
+            );
+            $upd->execute([$now, $id]);
+            if ($upd->rowCount() === 0) {
+                $pdo->rollBack();
+                Response::error('Could not approve listing', 409);
+            }
+
+            $cat = trim($row['category'] ?? '');
+            if ($cat !== '') {
+                $pdo->prepare("UPDATE categories SET count = count + 1 WHERE slug = ? OR name = ?")->execute([$cat, $cat]);
+            }
+
+            $pdo->commit();
+
+            GooglePing::pingSitemap();
+            Email::sendConfirmation([
+                'name' => trim($row['name']),
+                'slug' => $row['slug'],
+                'category' => trim($row['category'] ?? ''),
+                'city' => trim($row['city'] ?? ''),
+                'address' => trim($row['address'] ?? ''),
+                'phone' => trim($row['phone'] ?? ''),
+                'email' => trim($row['email'] ?? ''),
+                'websiteUrl' => trim($row['website_url'] ?? ''),
+            ]);
+
+            Response::success(['id' => $id, 'message' => 'Business approved']);
+        } catch (Exception $e) {
+            if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+            Logger::error('Error approving business:', $e->getMessage());
+            Response::error('Failed to approve business.', 500);
+        }
+    });
+
     // POST /api/admin/import-mongodb — upload JSON files and import into MySQL
     $router->post('/api/admin/import-mongodb', function($params) {
         $adminSecret = env('ADMIN_SECRET');

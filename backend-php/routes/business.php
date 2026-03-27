@@ -291,6 +291,23 @@ function registerBusinessRoutes(Router $router): void {
                 Response::error('Validation failed', 400, ['details' => $errors]);
             }
 
+            if (empty($_FILES['paymentProof']) || ($_FILES['paymentProof']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                Response::error('Validation failed', 400, ['details' => [['path' => ['paymentProof'], 'message' => 'Payment proof upload is required']]]);
+            }
+            if (($_FILES['paymentProof']['size'] ?? 0) > PaymentProofLocalStorage::MAX_BYTES) {
+                Response::error('Validation failed', 400, ['details' => [['path' => ['paymentProof'], 'message' => 'Payment proof must be 2MB or smaller']]]);
+            }
+
+            // Save payment proof locally (testing); before geocode, duplicate checks, or DB insert
+            try {
+                $paymentProofUrl = PaymentProofLocalStorage::save($_FILES['paymentProof']);
+            } catch (InvalidArgumentException $e) {
+                Response::error('Validation failed', 400, ['details' => [['path' => ['paymentProof'], 'message' => $e->getMessage()]]]);
+            } catch (Throwable $e) {
+                Logger::error('Payment proof save failed:', $e->getMessage());
+                Response::error('Could not save payment proof.', 500);
+            }
+
             $latitude = isset($data['latitude']) ? (float)$data['latitude'] : null;
             $longitude = isset($data['longitude']) ? (float)$data['longitude'] : null;
             $locationVerified = false;
@@ -341,7 +358,7 @@ function registerBusinessRoutes(Router $router): void {
             $normalized = DuplicateCheck::getNormalizedForInsert(trim($data['phone']), trim($data['websiteUrl'] ?? ''));
             $now = date('Y-m-d H:i:s');
 
-            $stmt = $pdo->prepare("INSERT INTO businesses (name, slug, category, sub_category, country, province, city, area, postal_code, address, phone, phone_digits, contact_person, whatsapp, email, description, website_url, website_normalized, facebook_url, gmb_url, youtube_url, profile_username, swift_code, branch_code, city_dialing_code, iban, logo_url, logo_public_id, status, approved_at, approved_by, featured, latitude, longitude, location_verified, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("INSERT INTO businesses (name, slug, category, sub_category, country, province, city, area, postal_code, address, phone, phone_digits, contact_person, whatsapp, email, description, website_url, website_normalized, facebook_url, gmb_url, youtube_url, profile_username, swift_code, branch_code, city_dialing_code, iban, logo_url, logo_public_id, payment_proof_url, sender_name, status, approved_at, approved_by, featured, latitude, longitude, location_verified, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
             $stmt->execute([
                 trim($data['name']), $uniqueSlug, trim($data['category']), trim($data['subCategory'] ?? '') ?: null,
@@ -355,31 +372,19 @@ function registerBusinessRoutes(Router $router): void {
                 trim($data['youtubeUrl'] ?? '') ?: null, trim($data['profileUsername'] ?? '') ?: null,
                 trim($data['swiftCode'] ?? '') ?: null, trim($data['branchCode'] ?? '') ?: null,
                 trim($data['cityDialingCode'] ?? '') ?: null, trim($data['iban'] ?? '') ?: null,
-                $logoUrl, $logoPublicId, 'approved', $now, 'auto', 0, $latitude, $longitude,
+                $logoUrl, $logoPublicId, $paymentProofUrl, trim($data['senderName']),
+                'pending', null, null, 0, $latitude, $longitude,
                 $locationVerified ? 1 : 0, $now,
             ]);
 
             $insertId = (int)$pdo->lastInsertId();
 
-            $pdo->prepare("UPDATE categories SET count = count + 1 WHERE slug = ?")->execute([trim($data['category'])]);
-
-            GooglePing::pingSitemap();
-            Email::sendConfirmation([
-                'name' => trim($data['name']),
-                'slug' => $uniqueSlug,
-                'category' => trim($data['category']),
-                'city' => trim($data['city']),
-                'address' => trim($data['address']),
-                'phone' => trim($data['phone']),
-                'email' => trim($data['email']),
-                'websiteUrl' => trim($data['websiteUrl'] ?? ''),
-            ]);
-
             Response::json([
                 'ok' => true,
                 'id' => $insertId,
                 'slug' => $uniqueSlug,
-                'business' => ['id' => $insertId, 'slug' => $uniqueSlug, 'name' => trim($data['name'])],
+                'status' => 'pending',
+                'business' => ['id' => $insertId, 'slug' => $uniqueSlug, 'name' => trim($data['name']), 'status' => 'pending'],
             ], 201);
         } catch (Exception $e) {
             Logger::error('Business creation error:', $e->getMessage());

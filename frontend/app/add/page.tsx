@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { ChevronsUpDown, MapPin, Building, User, Phone, Mail, MessageSquare, Globe, Camera, CheckCircle, Upload, Star, Shield, Zap } from "lucide-react"
+import { ChevronsUpDown, MapPin, Building, User, Phone, Mail, MessageSquare, Globe, Camera, CheckCircle, Upload, Star, Shield, Zap, Receipt, FileText, AlertTriangle } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -39,6 +39,8 @@ interface FormState {
   gmbUrl?: string
   youtubeUrl?: string
   profileUsername?: string
+  paymentProof: File | null
+  senderName: string
 }
 
 export function AddBusinessForm({
@@ -60,6 +62,7 @@ export function AddBusinessForm({
   const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null)
   const [duplicateWarning, setDuplicateWarning] = useState<boolean>(false)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [paymentProofPreviewUrl, setPaymentProofPreviewUrl] = useState<string | null>(null)
   const [activeSection, setActiveSection] = useState(0)
   const [locationLat, setLocationLat] = useState<number | null>(null)
   const [locationLng, setLocationLng] = useState<number | null>(null)
@@ -68,6 +71,8 @@ export function AddBusinessForm({
   const [geocodeFailed, setGeocodeFailed] = useState(false)
   const DESCRIPTION_MAX = 1000
   const DESCRIPTION_MIN = 500
+  const PAYMENT_PROOF_MAX_BYTES = 2 * 1024 * 1024
+  const PAYMENT_PROOF_ACCEPT = "image/png,image/jpeg,image/jpg"
   const CACHE_TTL_MS = 60 * 60 * 1000
   const PAKISTAN_COUNTRY_CODE = "+92"
   const PAKISTAN_MOBILE_DIGITS = 10
@@ -116,6 +121,12 @@ export function AddBusinessForm({
   useEffect(() => {
     fetchCategories()
   }, [])
+
+  useEffect(() => {
+    return () => {
+      if (paymentProofPreviewUrl) URL.revokeObjectURL(paymentProofPreviewUrl)
+    }
+  }, [paymentProofPreviewUrl])
   
   const [catOpen, setCatOpen] = useState(false)
   const [catQuery, setCatQuery] = useState("")
@@ -161,6 +172,8 @@ export function AddBusinessForm({
     gmbUrl: "",
     youtubeUrl: "",
     profileUsername: "",
+    paymentProof: null,
+    senderName: "",
   })
 
   const fetchSubcategories = async () => {
@@ -319,15 +332,17 @@ export function AddBusinessForm({
       form.address,
       form.phone,
       form.description,
-      form.logoFile
-    ];
-    
-    const filledCount = requiredFields.filter(field => 
-      field !== null && field !== undefined && field !== ''
-    ).length;
-    
-    return Math.round((filledCount / requiredFields.length) * 100);
-  }, [form]);
+      form.logoFile,
+      form.paymentProof,
+      form.senderName,
+    ]
+
+    const filledCount = requiredFields.filter(
+      (field) => field !== null && field !== undefined && field !== ""
+    ).length
+
+    return Math.round((filledCount / requiredFields.length) * 100)
+  }, [form])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target
@@ -360,6 +375,23 @@ export function AddBusinessForm({
     }
   }
 
+  const handlePaymentProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    if (paymentProofPreviewUrl) {
+      URL.revokeObjectURL(paymentProofPreviewUrl)
+      setPaymentProofPreviewUrl(null)
+    }
+    setForm((prev) => ({ ...prev, paymentProof: file }))
+    if (fieldErrors.paymentProof) {
+      setFieldErrors((prev) => ({ ...prev, paymentProof: false }))
+      setFieldErrorMessages((prev) => ({ ...prev, paymentProof: "" }))
+    }
+    setFormErrorMessage(null)
+    if (file && file.type.startsWith("image/")) {
+      setPaymentProofPreviewUrl(URL.createObjectURL(file))
+    }
+  }
+
   const friendlyLabels: Record<string, { label: string; inputId: string; message: string }> = {
     businessName: { label: "Business Name", inputId: "businessName", message: "Enter your business name" },
     category: { label: "Category", inputId: "category", message: "Select a category" },
@@ -375,12 +407,13 @@ export function AddBusinessForm({
     facebookUrl: { label: "Facebook", inputId: "facebookUrl", message: "Enter a valid Facebook URL" },
     gmbUrl: { label: "Google Business", inputId: "gmbUrl", message: "Enter a valid Google Business URL" },
     youtubeUrl: { label: "YouTube", inputId: "youtubeUrl", message: "Enter a valid YouTube URL" },
+    paymentProof: { label: "Payment proof", inputId: "paymentProof", message: "Upload payment proof (screenshot or receipt)" },
+    senderName: { label: "Sender name", inputId: "senderName", message: "Enter sender name (Easypaisa / JazzCash / bank)" },
   }
 
   // Client-side format validation helpers
   const phoneDigits = (s: string) => String(s || "").replace(/\D/g, "")
   const toPakistanDigits = (s: string) => phoneDigits(s).slice(0, PAKISTAN_MOBILE_DIGITS)
-  const isValidPakistanMobile = (digits: string) => digits.length === PAKISTAN_MOBILE_DIGITS && PAKISTAN_MOBILE_REGEX.test(digits)
   const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || "").trim())
   const isValidUrl = (s: string) => {
     const v = String(s || "").trim()
@@ -393,40 +426,57 @@ export function AddBusinessForm({
     }
   }
 
-  const validate = () => {
-    setFormErrorMessage(null)
+  const isAllowedPaymentProofFile = (file: File) => {
+    const mimeOk = /^image\/(png|jpe?g)$/i.test(file.type) || file.type === "image/jpg"
+    const extOk = /\.(jpe?g|png)$/i.test(file.name)
+    return mimeOk && extOk
+  }
+
+  const collectValidationErrors = (f: FormState): { errors: Record<string, boolean>; messages: Record<string, string> } => {
     const required = [
-      ["businessName", form.businessName],
-      ["category", form.category],
-      ["country", form.country],
-      ["city", form.city],
-      ["address", form.address],
-      ["phone", form.phone],
-      ["whatsapp", form.whatsapp],
-      ["email", form.email],
-      ["description", form.description],
+      ["businessName", f.businessName],
+      ["category", f.category],
+      ["country", f.country],
+      ["city", f.city],
+      ["address", f.address],
+      ["phone", f.phone],
+      ["whatsapp", f.whatsapp],
+      ["email", f.email],
+      ["description", f.description],
+      ["senderName", f.senderName],
     ] as const
 
     const missingKeys = required.filter(([, v]) => !v || String(v).trim() === "").map(([k]) => k as string)
-    if (!form.logoFile) missingKeys.push("logo")
+    if (!f.logoFile) missingKeys.push("logo")
+    if (!f.paymentProof) missingKeys.push("paymentProof")
 
     const errors: Record<string, boolean> = {}
     const messages: Record<string, string> = {}
 
-    missingKeys.forEach(key => {
+    missingKeys.forEach((key) => {
       errors[key] = true
       messages[key] = friendlyLabels[key]?.message || "This field is required"
     })
 
+    if (f.paymentProof) {
+      if (!isAllowedPaymentProofFile(f.paymentProof)) {
+        errors.paymentProof = true
+        messages.paymentProof = "Upload a JPG, JPEG, or PNG image only."
+      } else if (f.paymentProof.size > PAYMENT_PROOF_MAX_BYTES) {
+        errors.paymentProof = true
+        messages.paymentProof = `Payment proof must be ${PAYMENT_PROOF_MAX_BYTES / (1024 * 1024)}MB or smaller (JPG, JPEG, PNG).`
+      }
+    }
+
     // Description: minimum 500 characters
-    if (form.description?.trim() && form.description.trim().length < DESCRIPTION_MIN) {
+    if (f.description?.trim() && f.description.trim().length < DESCRIPTION_MIN) {
       errors.description = true
-      messages.description = `Description must be at least ${DESCRIPTION_MIN} characters (you have ${form.description.trim().length}).`
+      messages.description = `Description must be at least ${DESCRIPTION_MIN} characters (you have ${f.description.trim().length}).`
     }
 
     // Digital presence: at least one of Website or Facebook required
-    const hasWebsite = !!form.websiteUrl?.trim()
-    const hasFacebook = !!form.facebookUrl?.trim()
+    const hasWebsite = !!f.websiteUrl?.trim()
+    const hasFacebook = !!f.facebookUrl?.trim()
     if (!hasWebsite && !hasFacebook) {
       errors.websiteUrl = true
       errors.facebookUrl = true
@@ -435,8 +485,8 @@ export function AddBusinessForm({
     }
 
     // Pakistan mobile: exactly 10 digits after +92, must start with 3 (e.g. 300 1234567)
-    if (form.phone?.trim()) {
-      const digits = toPakistanDigits(form.phone)
+    if (f.phone?.trim()) {
+      const digits = toPakistanDigits(f.phone)
       if (digits.length !== PAKISTAN_MOBILE_DIGITS) {
         errors.phone = true
         messages.phone = "Enter 10 digits (Pakistan mobile, e.g. 300 1234567). Only +92 numbers accepted."
@@ -445,8 +495,8 @@ export function AddBusinessForm({
         messages.phone = "Pakistan mobile numbers must start with 3 (e.g. 300, 301, 321). Only +92 accepted."
       }
     }
-    if (form.whatsapp?.trim()) {
-      const digits = toPakistanDigits(form.whatsapp)
+    if (f.whatsapp?.trim()) {
+      const digits = toPakistanDigits(f.whatsapp)
       if (digits.length !== PAKISTAN_MOBILE_DIGITS) {
         errors.whatsapp = true
         messages.whatsapp = "Enter 10 digits (Pakistan mobile, e.g. 300 1234567). Only +92 numbers accepted."
@@ -455,26 +505,38 @@ export function AddBusinessForm({
         messages.whatsapp = "Pakistan mobile numbers must start with 3 (e.g. 300, 301, 321). Only +92 accepted."
       }
     }
-    if (form.email?.trim() && !isValidEmail(form.email)) {
+    if (f.email?.trim() && !isValidEmail(f.email)) {
       errors.email = true
       messages.email = "Enter a valid email address"
     }
-    if (form.websiteUrl?.trim() && !isValidUrl(form.websiteUrl)) {
+    if (f.websiteUrl?.trim() && !isValidUrl(f.websiteUrl)) {
       errors.websiteUrl = true
       messages.websiteUrl = "Enter a valid website URL"
     }
-    if (form.facebookUrl?.trim() && !isValidUrl(form.facebookUrl)) {
+    if (f.facebookUrl?.trim() && !isValidUrl(f.facebookUrl)) {
       errors.facebookUrl = true
       messages.facebookUrl = "Enter a valid Facebook URL"
     }
-    if (form.gmbUrl?.trim() && !isValidUrl(form.gmbUrl)) {
+    if (f.gmbUrl?.trim() && !isValidUrl(f.gmbUrl)) {
       errors.gmbUrl = true
       messages.gmbUrl = "Enter a valid Google Business URL"
     }
-    if (form.youtubeUrl?.trim() && !isValidUrl(form.youtubeUrl)) {
+    if (f.youtubeUrl?.trim() && !isValidUrl(f.youtubeUrl)) {
       errors.youtubeUrl = true
       messages.youtubeUrl = "Enter a valid YouTube URL"
     }
+
+    return { errors, messages }
+  }
+
+  const canSubmit = useMemo(() => {
+    const { errors } = collectValidationErrors(form)
+    return Object.keys(errors).length === 0
+  }, [form])
+
+  const validate = () => {
+    setFormErrorMessage(null)
+    const { errors, messages } = collectValidationErrors(form)
 
     setFieldErrors(errors)
     setFieldErrorMessages(messages)
@@ -524,6 +586,9 @@ export function AddBusinessForm({
       if (form.logoFile) {
         fd.append("logo", form.logoFile)
       }
+      // Required by validate(); backend saves paymentProof locally before INSERT
+      fd.append("paymentProof", form.paymentProof!)
+      fd.append("senderName", form.senderName.trim())
       if (locationLat != null && locationLng != null) {
         fd.append("latitude", String(locationLat))
         fd.append("longitude", String(locationLng))
@@ -538,6 +603,10 @@ export function AddBusinessForm({
         const data = await res.json().catch(() => ({}))
         const slug = data?.slug ?? data?.business?.slug ?? null
         const name = form.businessName.trim() || "Your business"
+        if (paymentProofPreviewUrl) {
+          URL.revokeObjectURL(paymentProofPreviewUrl)
+          setPaymentProofPreviewUrl(null)
+        }
         setForm({
           businessName: "",
           contactPersonName: "",
@@ -557,6 +626,8 @@ export function AddBusinessForm({
           gmbUrl: "",
           youtubeUrl: "",
           profileUsername: "",
+          paymentProof: null,
+          senderName: "",
         })
         setFieldErrors({})
         setFieldErrorMessages({})
@@ -648,7 +719,7 @@ export function AddBusinessForm({
               <ol className="list-decimal list-inside text-sm text-gray-700 space-y-1">
                 <li>Fill in your business name, category, city, and address.</li>
                 <li>Add contact details (phone, email, WhatsApp, website).</li>
-                <li>Submit the form. Listing is free and goes live after submission.</li>
+                <li>Upload payment proof (Rs. 399) and submit. Our team reviews and publishes within 6 hours.</li>
               </ol>
             </section>
             <div className="mt-6 max-w-2xl mx-auto">
@@ -1186,14 +1257,179 @@ export function AddBusinessForm({
                   <AdSenseSlot slotId="add-after-digital-presence" className="my-0" />
                 </div>
 
+                {/* Payment proof & listing contribution */}
+                <section
+                  className="p-8 sm:p-10 border-b border-gray-100 bg-gradient-to-br from-slate-50/90 via-white to-emerald-50/40"
+                  aria-labelledby="payment-verification-heading"
+                >
+                  <div
+                    className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-amber-950 shadow-sm"
+                    role="status"
+                  >
+                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
+                    <p className="text-sm font-semibold leading-snug">
+                      Your listing will not be reviewed without payment proof
+                    </p>
+                  </div>
+
+                  <div className="mb-8 flex items-start gap-4 sm:gap-5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 shadow-lg sm:h-14 sm:w-14">
+                      <Receipt className="h-6 w-6 text-white sm:h-7 sm:w-7" aria-hidden />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 id="payment-verification-heading" className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                        Payment & verification
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-600 sm:text-base">
+                        Upload proof of your Rs.&nbsp;399 contribution and tell us who sent the payment.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+                    <div className="space-y-2 lg:col-span-2">
+                      <Label htmlFor="paymentProof" className="text-gray-700 font-semibold text-sm flex items-center gap-1">
+                        Upload Payment Proof (Screenshot / Receipt) <span className="text-red-500 text-lg">*</span>
+                      </Label>
+                      <div
+                        className={`rounded-xl border-2 border-dashed p-6 transition-colors ${
+                          fieldErrors.paymentProof
+                            ? "border-red-300 bg-red-50/50"
+                            : "border-gray-300 bg-gray-50/50 hover:border-emerald-400/80"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:gap-6">
+                          <div className="relative flex min-h-[10rem] w-full min-w-0 flex-1 flex-col items-center justify-center text-center sm:items-start sm:justify-start sm:text-left">
+                            <Upload className="mb-2 h-9 w-9 text-gray-400 sm:hidden" aria-hidden />
+                            <p className="text-sm font-medium text-gray-900">JPG, JPEG, or PNG · max 2&nbsp;MB</p>
+                            <p className="mt-1 text-xs text-gray-500">Screenshot or receipt (image only)</p>
+                            <Button type="button" variant="outline" size="sm" className="pointer-events-none relative z-0 mt-4 sm:mt-3">
+                              Choose file
+                            </Button>
+                            <Input
+                              id="paymentProof"
+                              name="paymentProof"
+                              type="file"
+                              accept={PAYMENT_PROOF_ACCEPT}
+                              onChange={handlePaymentProofChange}
+                              aria-invalid={!!fieldErrors.paymentProof}
+                              aria-describedby={fieldErrors.paymentProof ? "paymentProof-error" : "paymentProof-help"}
+                              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                            />
+                          </div>
+                          {form.paymentProof && (
+                            <div className="flex w-full flex-shrink-0 flex-col items-center gap-2 sm:w-auto sm:items-end">
+                              {paymentProofPreviewUrl ? (
+                                <div className="h-28 w-28 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-md sm:h-32 sm:w-32">
+                                  <img
+                                    src={paymentProofPreviewUrl}
+                                    alt="Payment proof preview"
+                                    className="h-full w-full object-contain p-1"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex h-28 w-full max-w-xs items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm sm:h-auto sm:min-h-[7rem] sm:w-56">
+                                  <FileText className="h-8 w-8 shrink-0 text-emerald-600" aria-hidden />
+                                  <span className="min-w-0 break-all text-left text-xs font-medium text-gray-800">
+                                    {form.paymentProof.name}
+                                  </span>
+                                </div>
+                              )}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs text-gray-600 hover:text-gray-900"
+                                onClick={() => {
+                                  const input = document.getElementById("paymentProof") as HTMLInputElement | null
+                                  if (input) input.value = ""
+                                  if (paymentProofPreviewUrl) URL.revokeObjectURL(paymentProofPreviewUrl)
+                                  setPaymentProofPreviewUrl(null)
+                                  setForm((p) => ({ ...p, paymentProof: null }))
+                                  setFieldErrors((prev) => ({ ...prev, paymentProof: false }))
+                                  setFieldErrorMessages((prev) => ({ ...prev, paymentProof: "" }))
+                                }}
+                              >
+                                Remove file
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {fieldErrorMessages.paymentProof ? (
+                        <p id="paymentProof-error" className="text-sm text-red-600 mt-1" role="alert">
+                          {fieldErrorMessages.paymentProof}
+                        </p>
+                      ) : (
+                        <p id="paymentProof-help" className="text-xs text-gray-500 mt-1">
+                          Required so we can verify your payment before publishing.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2 lg:col-span-2">
+                      <Label htmlFor="senderName" className="text-gray-700 font-semibold text-sm flex items-center gap-1">
+                        Sender Name (Easypaisa / JazzCash / Bank Name) <span className="text-red-500 text-lg">*</span>
+                      </Label>
+                      <Input
+                        id="senderName"
+                        name="senderName"
+                        autoComplete="name"
+                        placeholder="e.g. Ali Khan · Easypaisa"
+                        value={form.senderName}
+                        onChange={handleChange}
+                        className={`h-12 border-2 rounded-lg transition-all bg-white ${
+                          fieldErrors.senderName
+                            ? "border-red-400 bg-red-50/50 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                            : "border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                        }`}
+                        aria-invalid={!!fieldErrors.senderName}
+                        aria-describedby={fieldErrors.senderName ? "senderName-error" : undefined}
+                      />
+                      {fieldErrorMessages.senderName && (
+                        <p id="senderName-error" className="text-sm text-red-600 mt-1" role="alert">
+                          {fieldErrorMessages.senderName}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white/90 p-5 sm:p-6 text-left shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Important</p>
+                    <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-700">
+                      <p>
+                        To support our platform and maintain high-quality listings, a small contribution of Rs. 399 is
+                        required.
+                      </p>
+                      <p>
+                        We use premium cloud hosting and continuous optimization to ensure your business gets maximum
+                        visibility.
+                      </p>
+                      <p>
+                        After submitting your form and payment, your listing will be reviewed and published within 6
+                        hours. You will receive an email with your listing link once it goes live.
+                      </p>
+                      <p>Our team also works to help your business appear in Google search results.</p>
+                      <p>
+                        If you need to update or edit your listing at any time, you can contact us on WhatsApp, and our
+                        team will assist you quickly.
+                      </p>
+                      <p className="font-medium text-slate-800">
+                        Thank you for choosing Pakistan&apos;s premium business directory.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
                 {/* Submit Button — prominent green CTA like home page */}
                 <div className="p-8 sm:p-10 bg-gradient-to-b from-slate-50 to-white border-t border-gray-100">
                   <div className="max-w-2xl mx-auto text-center">
                     <Button
                       type="submit"
-                      className="w-full sm:w-auto min-h-[52px] sm:min-h-[56px] px-8 sm:px-12 py-4 text-base sm:text-lg font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                      disabled={submitting}
+                      className="w-full sm:w-auto min-h-[52px] sm:min-h-[56px] px-8 sm:px-12 py-4 text-base sm:text-lg font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:pointer-events-none disabled:opacity-50"
+                      disabled={submitting || !canSubmit}
                       aria-busy={submitting}
+                      aria-disabled={submitting || !canSubmit}
                       aria-live="polite"
                       aria-atomic="true"
                     >
@@ -1205,13 +1441,13 @@ export function AddBusinessForm({
                       ) : (
                         <span className="flex items-center justify-center gap-3">
                           <Star className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" aria-hidden />
-                          <span>Add Your Business Free</span>
+                          <span>Submit listing</span>
                           <Star className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" aria-hidden />
                         </span>
                       )}
                     </Button>
                     <p className="mt-4 text-sm text-gray-600">
-                      Your listing goes live immediately after submission. Free forever.
+                      Complete all required fields and payment proof to enable submit. We review and publish within 6 hours.
                     </p>
                   </div>
                 </div>

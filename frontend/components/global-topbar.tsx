@@ -17,6 +17,7 @@ export function GlobalTopbar() {
     if (pathname === "/") return true
     if (pathname.startsWith("/business/")) return true
     if (pathname.startsWith("/add")) return true
+    if (pathname.startsWith("/admin")) return true
     // Also hide on clean business detail routes at '/:slug' (single segment),
     // but keep visible on known top-level routes
     const isSingleSegment = /^\/[^/]+\/?$/.test(pathname)

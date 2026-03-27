@@ -52,6 +52,13 @@ class Validator {
             $errors[] = ['path' => ['postalCode'], 'message' => 'Postal code must be 3-12 characters'];
         }
 
+        $sender = trim($data['senderName'] ?? '');
+        if ($sender === '') {
+            $errors[] = ['path' => ['senderName'], 'message' => 'Sender name is required'];
+        } elseif (mb_strlen($sender) > 255) {
+            $errors[] = ['path' => ['senderName'], 'message' => 'Sender name is too long'];
+        }
+
         return $errors;
     }
 
