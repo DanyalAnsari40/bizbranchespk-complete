@@ -59,7 +59,7 @@ export default function AdminPage() {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch("/api/admin/auth", { credentials: "include" })
+        const res = await fetch("/api/admin/session", { credentials: "include" })
         const data = await res.json().catch(() => ({}))
         if (cancelled) return
         if (data?.ok) {
@@ -97,7 +97,7 @@ export default function AdminPage() {
     e.preventDefault()
     setLoginSubmitting(true)
     try {
-      const res = await fetch("/api/admin/auth", {
+      const res = await fetch("/api/admin/session", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -129,7 +129,7 @@ export default function AdminPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/admin/auth", { method: "DELETE", credentials: "include" })
+      await fetch("/api/admin/session", { method: "DELETE", credentials: "include" })
     } catch {
       /* ignore */
     }

@@ -18,6 +18,7 @@ require_once __DIR__ . '/lib/GooglePing.php';
 require_once __DIR__ . '/lib/Courier.php';
 require_once __DIR__ . '/lib/Validator.php';
 require_once __DIR__ . '/lib/PaymentProofLocalStorage.php';
+require_once __DIR__ . '/lib/AdminSession.php';
 
 // Load PHPMailer if available via composer
 $autoload = __DIR__ . '/vendor/autoload.php';

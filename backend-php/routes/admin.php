@@ -1,17 +1,47 @@
 <?php
 
-function registerAdminRoutes(Router $router): void {
-    // GET /api/admin/business/pending — listings awaiting approval (requires ADMIN_SECRET)
-    $router->get('/api/admin/business/pending', function($params) {
-        $adminSecret = env('ADMIN_SECRET');
-        if (!$adminSecret) Response::error('Missing ADMIN_SECRET', 500);
+function admin_api_authorized(): bool {
+    $adminSecret = env('ADMIN_SECRET');
+    if (!$adminSecret) {
+        return false;
+    }
+    $headerSecret = $_SERVER['HTTP_X_ADMIN_SECRET'] ?? '';
+    $bearer = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (!$headerSecret && str_starts_with($bearer, 'Bearer ')) {
+        $headerSecret = substr($bearer, 7);
+    }
+    if ($headerSecret === $adminSecret) {
+        return true;
+    }
+    return AdminSession::isLoggedIn();
+}
 
-        $bearer = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-        $headerSecret = $_SERVER['HTTP_X_ADMIN_SECRET'] ?? '';
-        if (!$headerSecret && str_starts_with($bearer, 'Bearer ')) {
-            $headerSecret = substr($bearer, 7);
+function registerAdminRoutes(Router $router): void {
+    // GET /api/admin/session — whether PHP session is logged in (for static export; no Node Route Handlers)
+    $router->get('/api/admin/session', function($params) {
+        Response::json(['ok' => AdminSession::isLoggedIn()]);
+    });
+
+    // POST /api/admin/session — login { "password": "..." }
+    $router->post('/api/admin/session', function($params) {
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $password = trim((string)($body['password'] ?? ''));
+        if ($password === '' || !AdminSession::loginWithPassword($password)) {
+            Response::error('Invalid password', 401);
         }
-        if ($headerSecret !== $adminSecret) Response::error('Unauthorized', 401);
+        Response::success([]);
+    });
+
+    // DELETE /api/admin/session — logout
+    $router->delete('/api/admin/session', function($params) {
+        AdminSession::logout();
+        Response::success([]);
+    });
+
+    // GET /api/admin/business/pending — listings awaiting approval (X-Admin-Secret or session)
+    $router->get('/api/admin/business/pending', function($params) {
+        if (!env('ADMIN_SECRET')) Response::error('Missing ADMIN_SECRET', 500);
+        if (!admin_api_authorized()) Response::error('Unauthorized', 401);
 
         try {
             $pdo = db();
@@ -36,15 +66,8 @@ function registerAdminRoutes(Router $router): void {
 
     // POST /api/admin/business/approve — approve one pending listing
     $router->post('/api/admin/business/approve', function($params) {
-        $adminSecret = env('ADMIN_SECRET');
-        if (!$adminSecret) Response::error('Missing ADMIN_SECRET', 500);
-
-        $bearer = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-        $headerSecret = $_SERVER['HTTP_X_ADMIN_SECRET'] ?? '';
-        if (!$headerSecret && str_starts_with($bearer, 'Bearer ')) {
-            $headerSecret = substr($bearer, 7);
-        }
-        if ($headerSecret !== $adminSecret) Response::error('Unauthorized', 401);
+        if (!env('ADMIN_SECRET')) Response::error('Missing ADMIN_SECRET', 500);
+        if (!admin_api_authorized()) Response::error('Unauthorized', 401);
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = (int)trim($body['id'] ?? '');

@@ -51,12 +51,13 @@ class Response {
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
         if ($origin && in_array(rtrim($origin, '/'), array_map(fn($o) => rtrim($o, '/'), $allowedOrigins))) {
             header("Access-Control-Allow-Origin: $origin");
+            header('Access-Control-Allow-Credentials: true');
         } elseif (!$origin && env('APP_ENV') === 'production') {
             // Same-origin requests (no Origin header) on cPanel single-domain setup
             header("Access-Control-Allow-Origin: " . ($siteUrl ?: '*'));
         }
         header('Access-Control-Allow-Methods: GET, HEAD, OPTIONS, POST, PUT, PATCH, DELETE');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization, x-admin-secret');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, x-admin-secret, Cookie');
         header('Access-Control-Max-Age: 86400');
 
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
