@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { ChevronsUpDown, MapPin, Building, User, Phone, Mail, MessageSquare, Globe, Camera, CheckCircle, Upload, Star, Shield, Zap, Receipt, FileText, AlertTriangle, Landmark } from "lucide-react"
+import { ChevronsUpDown, MapPin, Building, User, Phone, Mail, MessageSquare, Globe, Camera, CheckCircle, Upload, Star, Shield, Zap, Receipt, FileText, AlertTriangle, Landmark, Sparkles, Coins, Cloud, Clock, Search, MessageCircle, Heart } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -1397,30 +1397,77 @@ export function AddBusinessForm({
                     </div>
                   </div>
 
-                  <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white/90 p-5 sm:p-6 text-left shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Important</p>
-                    <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-700">
-                      <p>
-                        To support our platform and maintain high-quality listings, a small contribution of Rs. 399 is
-                        required.
-                      </p>
-                      <p>
-                        We use premium cloud hosting and continuous optimization to ensure your business gets maximum
-                        visibility.
-                      </p>
-                      <p>
-                        After submitting your form and payment, your listing will be reviewed and published within 6
-                        hours. You will receive an email with your listing link once it goes live.
-                      </p>
-                      <p>Our team also works to help your business appear in Google search results.</p>
-                      <p>
-                        If you need to update or edit your listing at any time, you can contact us on WhatsApp, and our
-                        team will assist you quickly.
-                      </p>
-                      <p className="font-medium text-slate-800">
-                        Thank you for choosing Pakistan&apos;s premium business directory.
-                      </p>
+                  <div className="mt-8 overflow-hidden rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50/70 via-white to-slate-50/90 text-left shadow-md ring-1 ring-emerald-500/10">
+                    <div className="flex items-center gap-3 border-b border-emerald-100/80 bg-emerald-600/5 px-5 py-4 sm:px-6">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white shadow-md">
+                        <Sparkles className="h-5 w-5" aria-hidden />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700/90">
+                          Good to know
+                        </p>
+                        <h4 className="text-base font-bold tracking-tight text-slate-900 sm:text-lg">
+                          Why we charge &amp; what happens next
+                        </h4>
+                      </div>
                     </div>
+                    <ul className="space-y-0 divide-y divide-slate-100/90 p-2 sm:p-3" role="list">
+                      {[
+                        {
+                          Icon: Coins,
+                          tone: "bg-amber-100 text-amber-800 ring-amber-200/80",
+                          text: (
+                            <>
+                              To support our platform and maintain high-quality listings, a small contribution of{" "}
+                              <span className="font-semibold text-slate-900">Rs. 399</span> is required.
+                            </>
+                          ),
+                        },
+                        {
+                          Icon: Cloud,
+                          tone: "bg-sky-100 text-sky-800 ring-sky-200/80",
+                          text: "We use premium cloud hosting and continuous optimization so your business gets maximum visibility.",
+                        },
+                        {
+                          Icon: Clock,
+                          tone: "bg-violet-100 text-violet-800 ring-violet-200/80",
+                          text: "After you submit and we receive payment proof, your listing is reviewed and published within 6 hours. You’ll get an email with your live listing link.",
+                        },
+                        {
+                          Icon: Search,
+                          tone: "bg-emerald-100 text-emerald-800 ring-emerald-200/80",
+                          text: "Our team works to help your business show up in Google search results.",
+                        },
+                        {
+                          Icon: MessageCircle,
+                          tone: "bg-teal-100 text-teal-800 ring-teal-200/80",
+                          text: "Need edits later? Contact us on WhatsApp and we’ll help you update your listing quickly.",
+                        },
+                        {
+                          Icon: Heart,
+                          tone: "bg-rose-100 text-rose-800 ring-rose-200/80",
+                          text: "Thank you for choosing Pakistan’s premium business directory.",
+                          emphasize: true,
+                        },
+                      ].map(({ Icon, tone, text, emphasize }, i) => (
+                        <li
+                          key={i}
+                          className={`flex gap-3.5 rounded-xl p-3.5 sm:gap-4 sm:p-4 ${emphasize ? "bg-gradient-to-r from-emerald-50/80 to-transparent" : "bg-white/40"}`}
+                        >
+                          <span
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${tone} shadow-sm`}
+                            aria-hidden
+                          >
+                            <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2} />
+                          </span>
+                          <p
+                            className={`min-w-0 flex-1 text-sm leading-relaxed text-slate-700 ${emphasize ? "font-semibold text-slate-800" : ""}`}
+                          >
+                            {text}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </section>
 
