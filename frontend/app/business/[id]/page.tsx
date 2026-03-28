@@ -1,6 +1,6 @@
 "use client"
 import React, { useRef, useState, useEffect } from 'react'
-import { MapPin, Phone, Mail, Star, FileText, Globe, MessageCircle, User, CheckCircle } from 'lucide-react'
+import { MapPin, Mail, Star, FileText, Globe, MessageCircle, User, CheckCircle } from "lucide-react"
 import { useParams, usePathname } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -15,7 +15,7 @@ import { BreadcrumbSchema } from "@/components/breadcrumb-schema"
 import { AdSection } from "@/components/ad-section"
 import { useToast } from "@/hooks/use-toast"
 import { logger } from "@/lib/logger"
-import { slugify } from "@/lib/utils"
+import { slugify, whatsappChatUrl } from "@/lib/utils"
 
 export default function BusinessDetailPage({
   initialBusiness,
@@ -309,14 +309,16 @@ export default function BusinessDetailPage({
             </p>
           )}
 
-          {/* Primary CTAs: Call, WhatsApp, Visit Website – above the fold, mobile-friendly */}
+          {/* Primary CTAs: WhatsApp (no tel), Visit Website – above the fold, mobile-friendly */}
           <div className="flex flex-wrap gap-2 sm:gap-3">
             {business.phone && (
               <a
-                href={`tel:${business.phone.replace(/\s/g, "")}`}
-                className="inline-flex items-center gap-2 px-4 py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity min-h-[44px]"
+                href={whatsappChatUrl(String(business.phone))}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-3 rounded-lg bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors min-h-[44px]"
               >
-                <Phone className="h-4 w-4 shrink-0" /> Call
+                <MessageCircle className="h-4 w-4 shrink-0" /> WhatsApp
               </a>
             )}
             {business.whatsapp && (
@@ -595,17 +597,19 @@ export default function BusinessDetailPage({
 
                 {/* 2. Phone (NAP - second in sidebar) */}
                 {business.phone && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <Phone className="h-5 w-5 text-gray-600 flex-shrink-0" aria-hidden />
+                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                    <MessageCircle className="h-5 w-5 text-green-600 flex-shrink-0" aria-hidden />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm">Phone</p>
+                      <p className="font-medium text-gray-900 text-sm">WhatsApp</p>
                       <p className="text-sm text-gray-700 mt-0.5" itemProp="telephone">{business.phone}</p>
                     </div>
-                    <a 
-                      href={`tel:${business.phone.replace(/\s/g, "")}`}
-                      className="text-primary hover:text-primary/80 font-medium text-sm flex-shrink-0"
+                    <a
+                      href={whatsappChatUrl(String(business.phone))}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-green-600 hover:text-green-800 font-medium text-sm flex-shrink-0"
                     >
-                      Call
+                      Chat
                     </a>
                   </div>
                 )}

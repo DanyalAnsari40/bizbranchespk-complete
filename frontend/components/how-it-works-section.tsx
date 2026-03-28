@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Search, FileText, Phone, Building2, ArrowRight, Sparkles, CheckCircle2, Star, Users, Globe, Zap } from "lucide-react"
+import { Search, FileText, MessageCircle, Building2, ArrowRight, Sparkles, CheckCircle2, Star, Users, Globe, Zap } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef } from "react"
 
@@ -28,11 +28,11 @@ const steps = [
   {
     step: "3",
     title: "Connect & Engage",
-    description: "Contact businesses by phone, WhatsApp, email, or website. Details are on each listing.",
-    icon: Phone,
+    description: "Open WhatsApp, email, or website from each listing. We prioritize chat-friendly contact for a smoother experience.",
+    icon: MessageCircle,
     color: "from-green-500 to-emerald-500",
     bgColor: "bg-green-50",
-    features: ["Phone & WhatsApp", "Email", "Website"]
+    features: ["WhatsApp", "Email", "Website"]
   },
   {
     step: "4",

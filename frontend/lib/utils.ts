@@ -5,6 +5,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/** Digits only for wa.me (Pakistan: ensure leading 92). */
+export function toWhatsAppDigits(phone: string): string {
+  const d = String(phone).replace(/\D/g, "")
+  if (!d) return ""
+  if (d.startsWith("92")) return d
+  if (d.startsWith("0")) return "92" + d.slice(1)
+  if (d.length === 10 && d.startsWith("3")) return "92" + d
+  return d
+}
+
+export function whatsappChatUrl(phone: string): string {
+  const digits = toWhatsAppDigits(phone)
+  return digits ? `https://wa.me/${digits}` : "#"
+}
+
 /** Reusable slug for URLs (categories, cities, etc.) */
 export const slugify = (s: string): string =>
   String(s)

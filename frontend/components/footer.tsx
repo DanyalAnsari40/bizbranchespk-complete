@@ -74,13 +74,15 @@ export function Footer() {
                 <span>Pakistan — Find businesses in your city</span>
               </div>
               <a
-                href="tel:+923142552851"
+                href="https://wa.me/923142552851"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-3 text-slate-400 hover:text-emerald-400 transition-colors"
               >
                 <span className={iconWrap.replace("group-hover:", "hover:")}>
                   <Phone className="h-4 w-4" />
                 </span>
-                0314-2552851
+                0314-2552851 (WhatsApp)
               </a>
               <a
                 href="mailto:support@bizbranches.pk"
@@ -194,11 +196,13 @@ export function Footer() {
                 </Link>
               </Button>
               <a
-                href="tel:+923142552851"
+                href="https://wa.me/923142552851"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-600 text-slate-300 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors text-sm font-medium bg-slate-800/40"
               >
                 <Phone className="h-4 w-4" />
-                Call: 0314-2552851
+                WhatsApp: 0314-2552851
               </a>
             </div>
           </div>

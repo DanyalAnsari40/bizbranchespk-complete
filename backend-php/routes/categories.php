@@ -1,6 +1,7 @@
 <?php
 
 $DEFAULT_SUBCATEGORIES = [
+    'importer-and-exporter' => [['name'=>'General Trading','slug'=>'general-trading'],['name'=>'Freight & Logistics','slug'=>'freight-logistics'],['name'=>'Customs & Clearance','slug'=>'customs-clearance'],['name'=>'Textile & Garments','slug'=>'textile-garments'],['name'=>'Agriculture & Food','slug'=>'agriculture-food']],
     'beauty-salon' => [['name'=>'Hair Care','slug'=>'hair-care'],['name'=>'Makeup','slug'=>'makeup'],['name'=>'Skin Care','slug'=>'skin-care'],['name'=>'Nail Salon','slug'=>'nail-salon'],['name'=>'Spa','slug'=>'spa']],
     'automotive' => [['name'=>'Car Repair','slug'=>'car-repair'],['name'=>'Car Wash','slug'=>'car-wash'],['name'=>'Tyres & Wheels','slug'=>'tyres-wheels'],['name'=>'Car Accessories','slug'=>'car-accessories'],['name'=>'Showroom','slug'=>'showroom']],
     'restaurants' => [['name'=>'Fast Food','slug'=>'fast-food'],['name'=>'BBQ','slug'=>'bbq'],['name'=>'Pakistani','slug'=>'pakistani'],['name'=>'Chinese','slug'=>'chinese'],['name'=>'Cafe','slug'=>'cafe']],

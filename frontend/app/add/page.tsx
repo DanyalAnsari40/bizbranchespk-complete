@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { ChevronsUpDown, MapPin, Building, User, Phone, Mail, MessageSquare, Globe, Camera, CheckCircle, Upload, Star, Shield, Zap, Receipt, FileText, AlertTriangle, Landmark, Sparkles, Coins, Cloud, Clock, Search, MessageCircle, Heart } from "lucide-react"
+import { ChevronsUpDown, MapPin, Building, User, Phone, Mail, MessageSquare, Globe, Camera, CheckCircle, Upload, Star, Shield, Zap, Receipt, FileText, AlertTriangle, Landmark, Sparkles, Coins, Cloud, Clock, Search, MessageCircle, Heart, Copy } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -43,6 +43,24 @@ interface FormState {
   senderName: string
 }
 
+/** Listing fee shown across the add form (keep in sync with product policy). */
+const LISTING_FEE_PKR = 300
+
+const PAYMENT_BANK = {
+  bank: "Meezan Bank",
+  accountNumber: "05810111165029",
+  accountTitle: "Digital Skills House",
+} as const
+
+function paymentDetailsClipboardText(): string {
+  return [
+    `BizBranches listing — Rs. ${LISTING_FEE_PKR}/-`,
+    `Bank: ${PAYMENT_BANK.bank}`,
+    `Account: ${PAYMENT_BANK.accountNumber}`,
+    `Title: ${PAYMENT_BANK.accountTitle}`,
+  ].join("\n")
+}
+
 export function AddBusinessForm({
   title = "Add Your Business Free",
   description = "Pakistan's free business listing directory. Get visibility in minutes.",
@@ -56,6 +74,19 @@ export function AddBusinessForm({
 }) {
   const { toast } = useToast()
   const router = useRouter()
+
+  const handleCopyPaymentDetails = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(paymentDetailsClipboardText())
+      toast({ title: "Copied", description: "All payment details are in your clipboard." })
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Could not copy",
+        description: `Copy manually: ${PAYMENT_BANK.accountNumber}`,
+      })
+    }
+  }, [toast])
   const [submitting, setSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
   const [fieldErrorMessages, setFieldErrorMessages] = useState<Record<string, string>>({})
@@ -721,9 +752,21 @@ export function AddBusinessForm({
               <h2 id="how-to-add-heading" className="text-lg font-semibold text-gray-900 mb-2">How to add your business listing in Pakistan</h2>
               <ol className="list-decimal list-inside text-sm text-gray-700 space-y-1">
                 <li>Fill in your business name, category, city, and address.</li>
-                <li>Add contact details (phone, email, WhatsApp, website).</li>
-                <li>Upload payment proof (Rs. 300) and submit. Our team reviews and publishes within 6 hours.</li>
+                <li>Add contact details (mobile, email, WhatsApp, website) for your listing.</li>
+                <li>Upload payment proof (Rs. {LISTING_FEE_PKR}/-) and submit. Our team reviews and publishes within 6 hours.</li>
               </ol>
+              <p className="mt-3 rounded-lg border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-center text-xs text-emerald-950 sm:text-sm">
+                <strong className="font-semibold">BizBranches support:</strong> we only work on{" "}
+                <a
+                  href="https://wa.me/923142552851"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-emerald-800 underline decoration-emerald-600/60 underline-offset-2 hover:text-emerald-900"
+                >
+                  WhatsApp
+                </a>
+                — we don&apos;t take inquiries by phone call.
+              </p>
             </section>
             <div className="mt-6 max-w-2xl mx-auto">
               <AdSenseSlot slotId="add-before-form-completion" className="my-6" />
@@ -1260,208 +1303,235 @@ export function AddBusinessForm({
                   <AdSenseSlot slotId="add-after-digital-presence" className="my-0" />
                 </div>
 
-                {/* Payment proof & listing contribution */}
+                {/* Payment: bank details → proof upload (Rs. LISTING_FEE_PKR) */}
                 <section
-                  className="p-8 sm:p-10 border-b border-gray-100 bg-gradient-to-br from-slate-50/90 via-white to-emerald-50/40"
-                  aria-labelledby="payment-verification-heading"
+                  className="border-b border-gray-100 bg-gradient-to-br from-emerald-50/40 via-white to-teal-50/30 p-5 sm:p-6 md:p-7"
+                  aria-labelledby="payment-bank-heading"
                 >
+                  <button
+                    type="button"
+                    onClick={handleCopyPaymentDetails}
+                    aria-label="Copy all bank payment details including account number to clipboard"
+                    className="group relative w-full overflow-hidden rounded-2xl border-2 border-emerald-400/50 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-900/20 transition-all hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-900/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-900 sm:p-5"
+                  >
+                    <span className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl transition-opacity group-hover:opacity-80" aria-hidden />
+                    <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-inner backdrop-blur-sm">
+                          <Landmark className="h-6 w-6" aria-hidden />
+                        </span>
+                        <div className="min-w-0">
+                          <p id="payment-bank-heading" className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100/95">
+                            Step 1 · Pay Rs. {LISTING_FEE_PKR}/-
+                          </p>
+                          <h3 className="mt-0.5 text-lg font-bold leading-tight sm:text-xl">
+                            Bank transfer — tap anywhere to copy all details
+                          </h3>
+                          <dl className="mt-3 space-y-1.5 rounded-xl bg-black/20 px-3 py-2.5 text-sm backdrop-blur-sm sm:text-[15px]">
+                            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                              <dt className="font-semibold text-emerald-100/90">Bank</dt>
+                              <dd className="font-medium">{PAYMENT_BANK.bank}</dd>
+                            </div>
+                            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                              <dt className="font-semibold text-emerald-100/90">Account</dt>
+                              <dd className="font-mono tabular-nums tracking-wide">{PAYMENT_BANK.accountNumber}</dd>
+                            </div>
+                            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                              <dt className="font-semibold text-emerald-100/90">Title</dt>
+                              <dd>{PAYMENT_BANK.accountTitle}</dd>
+                            </div>
+                          </dl>
+                        </div>
+                      </div>
+                      <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg bg-white/20 px-3 py-2 text-xs font-bold uppercase tracking-wide ring-1 ring-white/30 sm:flex-col sm:items-center sm:py-2.5">
+                        <Copy className="h-4 w-4" aria-hidden />
+                        Copy all
+                      </span>
+                    </div>
+                  </button>
+
                   <div
-                    className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-amber-950 shadow-sm"
+                    className="mt-3 flex items-center gap-2 rounded-lg border border-amber-200/90 bg-amber-50/95 px-3 py-2 text-amber-950 shadow-sm"
                     role="status"
                   >
-                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
-                    <p className="text-sm font-semibold leading-snug">
-                      Your listing will not be reviewed without payment proof
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                    <p className="text-xs font-semibold leading-snug sm:text-sm">
+                      Your listing won&apos;t be reviewed without payment proof below.
                     </p>
                   </div>
 
-                  <div className="mb-8 flex items-start gap-4 sm:gap-5">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 shadow-lg sm:h-14 sm:w-14">
-                      <Receipt className="h-6 w-6 text-white sm:h-7 sm:w-7" aria-hidden />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 id="payment-verification-heading" className="text-2xl font-bold text-gray-900 sm:text-3xl">
-                        Payment & verification
+                  <div className="mt-5 flex items-center gap-2.5 border-t border-emerald-200/40 pt-5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md">
+                      <Receipt className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div>
+                      <h3 id="payment-verification-heading" className="text-base font-bold text-gray-900 sm:text-lg">
+                        Step 2 · Proof &amp; sender
                       </h3>
-                      <p className="mt-1 text-sm text-gray-600 sm:text-base">
-                        Upload proof of your Rs.&nbsp;300 contribution and tell us who sent the payment.
+                      <p className="text-xs text-gray-600 sm:text-sm">
+                        Upload your screenshot and the name you used when paying (Rs.&nbsp;{LISTING_FEE_PKR}/-).
                       </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
-                    <div className="space-y-2 lg:col-span-2">
-                      <Label htmlFor="paymentProof" className="text-gray-700 font-semibold text-sm flex items-center gap-1">
-                        Upload Payment Proof (Screenshot / Receipt) <span className="text-red-500 text-lg">*</span>
-                      </Label>
-                      <div
-                        className={`rounded-xl border-2 border-dashed p-6 transition-colors ${
-                          fieldErrors.paymentProof
-                            ? "border-red-300 bg-red-50/50"
-                            : "border-gray-300 bg-gray-50/50 hover:border-emerald-400/80"
-                        }`}
-                      >
-                        <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:gap-6">
-                          <div className="relative flex min-h-[10rem] w-full min-w-0 flex-1 flex-col items-center justify-center text-center sm:items-start sm:justify-start sm:text-left">
-                            <Upload className="mb-2 h-9 w-9 text-gray-400 sm:hidden" aria-hidden />
-                            <p className="text-sm font-medium text-gray-900">JPG, JPEG, or PNG · max 2&nbsp;MB</p>
-                            <p className="mt-1 text-xs text-gray-500">Screenshot or receipt (image only)</p>
-                            <Button type="button" variant="outline" size="sm" className="pointer-events-none relative z-0 mt-4 sm:mt-3">
-                              Choose file
-                            </Button>
-                            <Input
-                              id="paymentProof"
-                              name="paymentProof"
-                              type="file"
-                              accept={PAYMENT_PROOF_ACCEPT}
-                              onChange={handlePaymentProofChange}
-                              aria-invalid={!!fieldErrors.paymentProof}
-                              aria-describedby={fieldErrors.paymentProof ? "paymentProof-error" : "paymentProof-help"}
-                              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                            />
-                          </div>
-                          {form.paymentProof && (
-                            <div className="flex w-full flex-shrink-0 flex-col items-center gap-2 sm:w-auto sm:items-end">
-                              {paymentProofPreviewUrl ? (
-                                <div className="h-28 w-28 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-md sm:h-32 sm:w-32">
-                                  <img
-                                    src={paymentProofPreviewUrl}
-                                    alt="Payment proof preview"
-                                    className="h-full w-full object-contain p-1"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="flex h-28 w-full max-w-xs items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm sm:h-auto sm:min-h-[7rem] sm:w-56">
-                                  <FileText className="h-8 w-8 shrink-0 text-emerald-600" aria-hidden />
-                                  <span className="min-w-0 break-all text-left text-xs font-medium text-gray-800">
-                                    {form.paymentProof.name}
-                                  </span>
-                                </div>
-                              )}
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="text-xs text-gray-600 hover:text-gray-900"
-                                onClick={() => {
-                                  const input = document.getElementById("paymentProof") as HTMLInputElement | null
-                                  if (input) input.value = ""
-                                  if (paymentProofPreviewUrl) URL.revokeObjectURL(paymentProofPreviewUrl)
-                                  setPaymentProofPreviewUrl(null)
-                                  setForm((p) => ({ ...p, paymentProof: null }))
-                                  setFieldErrors((prev) => ({ ...prev, paymentProof: false }))
-                                  setFieldErrorMessages((prev) => ({ ...prev, paymentProof: "" }))
-                                }}
-                              >
-                                Remove file
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {fieldErrorMessages.paymentProof ? (
-                        <p id="paymentProof-error" className="text-sm text-red-600 mt-1" role="alert">
-                          {fieldErrorMessages.paymentProof}
-                        </p>
-                      ) : (
-                        <p id="paymentProof-help" className="text-xs text-gray-500 mt-1">
-                          Required so we can verify your payment before publishing.
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2 lg:col-span-2">
-                      <Label htmlFor="senderName" className="text-gray-700 font-semibold text-sm flex items-center gap-1">
-                        Sender Name (Easypaisa / JazzCash / Bank Name) <span className="text-red-500 text-lg">*</span>
+                  <div className="mt-3 grid grid-cols-1 items-end gap-3 lg:grid-cols-2 lg:gap-4">
+                    <div className="space-y-1.5 min-w-0">
+                      <Label htmlFor="senderName" className="text-xs font-semibold text-gray-800">
+                        Sender name <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="senderName"
                         name="senderName"
                         autoComplete="name"
-                        placeholder="e.g. Ali Khan · Easypaisa"
+                        placeholder="e.g. Ali Khan · bank app name"
                         value={form.senderName}
                         onChange={handleChange}
-                        className={`h-12 border-2 rounded-lg transition-all bg-white ${
+                        className={`h-10 border-2 text-sm transition-all bg-white ${
                           fieldErrors.senderName
-                            ? "border-red-400 bg-red-50/50 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                            : "border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                            ? "border-red-400 bg-red-50/50 focus-visible:ring-red-200"
+                            : "border-gray-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-200"
                         }`}
                         aria-invalid={!!fieldErrors.senderName}
                         aria-describedby={fieldErrors.senderName ? "senderName-error" : undefined}
                       />
                       {fieldErrorMessages.senderName && (
-                        <p id="senderName-error" className="text-sm text-red-600 mt-1" role="alert">
+                        <p id="senderName-error" className="text-xs text-red-600" role="alert">
                           {fieldErrorMessages.senderName}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5 min-w-0">
+                      <Label htmlFor="paymentProof" className="text-xs font-semibold text-gray-800">
+                        Payment screenshot <span className="text-red-500">*</span>
+                      </Label>
+                      <div
+                        className={`flex min-h-[4.5rem] flex-row items-stretch gap-2 rounded-xl border-2 border-dashed p-2 transition-colors ${
+                          fieldErrors.paymentProof
+                            ? "border-red-300 bg-red-50/40"
+                            : "border-gray-300 bg-white/80 hover:border-emerald-400/90"
+                        }`}
+                      >
+                        <div className="relative flex min-h-[4rem] min-w-0 flex-1 flex-col items-center justify-center px-1 text-center">
+                          <Upload className="h-5 w-5 text-gray-400" aria-hidden />
+                          <span className="mt-1 text-[11px] font-medium text-gray-700">JPG / PNG · 2&nbsp;MB max</span>
+                          <Input
+                            id="paymentProof"
+                            name="paymentProof"
+                            type="file"
+                            accept={PAYMENT_PROOF_ACCEPT}
+                            onChange={handlePaymentProofChange}
+                            aria-invalid={!!fieldErrors.paymentProof}
+                            aria-describedby={fieldErrors.paymentProof ? "paymentProof-error" : "paymentProof-help"}
+                            className="absolute inset-0 z-10 cursor-pointer opacity-0"
+                          />
+                        </div>
+                        {form.paymentProof && (
+                          <div className="flex shrink-0 items-center gap-2">
+                            {paymentProofPreviewUrl ? (
+                              <div className="h-14 w-14 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={paymentProofPreviewUrl}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex max-w-[7rem] items-center gap-1 rounded border border-gray-200 bg-white px-2 py-1">
+                                <FileText className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                                <span className="truncate text-[10px] font-medium text-gray-800">{form.paymentProof.name}</span>
+                              </div>
+                            )}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-[11px] text-gray-600 hover:text-gray-900"
+                              onClick={() => {
+                                const input = document.getElementById("paymentProof") as HTMLInputElement | null
+                                if (input) input.value = ""
+                                if (paymentProofPreviewUrl) URL.revokeObjectURL(paymentProofPreviewUrl)
+                                setPaymentProofPreviewUrl(null)
+                                setForm((p) => ({ ...p, paymentProof: null }))
+                                setFieldErrors((prev) => ({ ...prev, paymentProof: false }))
+                                setFieldErrorMessages((prev) => ({ ...prev, paymentProof: "" }))
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      {fieldErrorMessages.paymentProof ? (
+                        <p id="paymentProof-error" className="text-xs text-red-600" role="alert">
+                          {fieldErrorMessages.paymentProof}
+                        </p>
+                      ) : (
+                        <p id="paymentProof-help" className="text-[11px] text-gray-500">
+                          Required so we can match your payment before publishing.
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="mt-8 overflow-hidden rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50/70 via-white to-slate-50/90 text-left shadow-md ring-1 ring-emerald-500/10">
-                    <div className="flex items-center gap-3 border-b border-emerald-100/80 bg-emerald-600/5 px-5 py-4 sm:px-6">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white shadow-md">
-                        <Sparkles className="h-5 w-5" aria-hidden />
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700/90">
-                          Good to know
-                        </p>
-                        <h4 className="text-base font-bold tracking-tight text-slate-900 sm:text-lg">
-                          Why we charge &amp; what happens next
-                        </h4>
-                      </div>
+                  <div className="mt-5 overflow-hidden rounded-xl border border-emerald-200/50 bg-white/90 text-left shadow-sm ring-1 ring-emerald-500/5">
+                    <div className="flex items-center gap-2 border-b border-emerald-100/90 bg-emerald-50/50 px-3 py-2">
+                      <Sparkles className="h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden />
+                      <p className="text-xs font-bold text-slate-900">Good to know</p>
+                      <span className="hidden text-[10px] font-medium text-slate-500 sm:inline">— same info, shorter layout</span>
                     </div>
-                    <ul className="space-y-0 divide-y divide-slate-100/90 p-2 sm:p-3" role="list">
+                    <ul className="grid grid-cols-1 gap-1 p-2 sm:grid-cols-2" role="list">
                       {[
                         {
                           Icon: Coins,
-                          tone: "bg-amber-100 text-amber-800 ring-amber-200/80",
+                          tone: "bg-amber-100 text-amber-800 ring-amber-200/60",
                           text: (
                             <>
-                              To support our platform and maintain high-quality listings, a small contribution of{" "}
-                              <span className="font-semibold text-slate-900">Rs. 300</span> is required.
+                              Small contribution of <span className="font-semibold text-slate-900">Rs. {LISTING_FEE_PKR}/-</span>{" "}
+                              supports quality listings.
                             </>
                           ),
                         },
                         {
                           Icon: Cloud,
-                          tone: "bg-sky-100 text-sky-800 ring-sky-200/80",
-                          text: "We use premium cloud hosting and continuous optimization so your business gets maximum visibility.",
+                          tone: "bg-sky-100 text-sky-800 ring-sky-200/60",
+                          text: "Premium hosting and optimization for your visibility.",
                         },
                         {
                           Icon: Clock,
-                          tone: "bg-violet-100 text-violet-800 ring-violet-200/80",
-                          text: "After you submit and we receive payment proof, your listing is reviewed and published within 6 hours. You’ll get an email with your live listing link.",
+                          tone: "bg-violet-100 text-violet-800 ring-violet-200/60",
+                          text: "Review and publish within 6 hours; email with your live link.",
                         },
                         {
                           Icon: Search,
-                          tone: "bg-emerald-100 text-emerald-800 ring-emerald-200/80",
-                          text: "Our team works to help your business show up in Google search results.",
+                          tone: "bg-emerald-100 text-emerald-800 ring-emerald-200/60",
+                          text: "We work to help you show up in Google search.",
                         },
                         {
                           Icon: MessageCircle,
-                          tone: "bg-teal-100 text-teal-800 ring-teal-200/80",
-                          text: "Need edits later? Contact us on WhatsApp and we’ll help you update your listing quickly.",
+                          tone: "bg-teal-100 text-teal-800 ring-teal-200/60",
+                          text: "Edits later via WhatsApp — quick help from our team.",
                         },
                         {
                           Icon: Heart,
-                          tone: "bg-rose-100 text-rose-800 ring-rose-200/80",
-                          text: "Thank you for choosing Pakistan’s premium business directory.",
+                          tone: "bg-rose-100 text-rose-800 ring-rose-200/60",
+                          text: "Thanks for choosing Pakistan’s premium business directory.",
                           emphasize: true,
                         },
                       ].map(({ Icon, tone, text, emphasize }, i) => (
                         <li
                           key={i}
-                          className={`flex gap-3.5 rounded-xl p-3.5 sm:gap-4 sm:p-4 ${emphasize ? "bg-gradient-to-r from-emerald-50/80 to-transparent" : "bg-white/40"}`}
+                          className={`flex gap-2 rounded-md border border-slate-100/90 bg-white/60 px-2 py-1.5 shadow-sm ${emphasize ? "bg-emerald-50/50 sm:col-span-2" : ""}`}
                         >
                           <span
-                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${tone} shadow-sm`}
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ring-1 ${tone}`}
                             aria-hidden
                           >
-                            <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2} />
+                            <Icon className="h-3 w-3" strokeWidth={2.25} />
                           </span>
                           <p
-                            className={`min-w-0 flex-1 text-sm leading-relaxed text-slate-700 ${emphasize ? "font-semibold text-slate-800" : ""}`}
+                            className={`min-w-0 flex-1 text-[11px] leading-snug text-slate-700 sm:text-xs ${emphasize ? "font-semibold text-slate-800" : ""}`}
                           >
                             {text}
                           </p>
@@ -1471,42 +1541,9 @@ export function AddBusinessForm({
                   </div>
                 </section>
 
-                {/* Submit Button — prominent green CTA like home page */}
-                <div className="p-8 sm:p-10 bg-gradient-to-b from-slate-50 to-white border-t border-gray-100">
-                  <div className="max-w-2xl mx-auto text-center">
-                    <div
-                      className="mb-8 rounded-2xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50/90 to-white p-5 text-left shadow-sm sm:p-6"
-                      role="region"
-                      aria-labelledby="bank-transfer-heading"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
-                          <Landmark className="h-5 w-5" aria-hidden />
-                        </div>
-                        <div className="min-w-0 flex-1 space-y-3">
-                          <h3 id="bank-transfer-heading" className="text-base font-bold text-slate-900 sm:text-lg">
-                            Pay via bank transfer (Rs.&nbsp;300)
-                          </h3>
-                          <p className="text-sm text-slate-600">
-                            Send the listing fee to the account below, then upload your payment proof and submit the form.
-                          </p>
-                          <dl className="space-y-2 text-sm sm:text-base">
-                            <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-                              <dt className="font-semibold text-slate-700 sm:min-w-[7.5rem]">Bank</dt>
-                              <dd className="text-slate-900">Meezan Bank</dd>
-                            </div>
-                            <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-                              <dt className="font-semibold text-slate-700 sm:min-w-[7.5rem]">Account number</dt>
-                              <dd className="font-mono text-slate-900 tabular-nums tracking-wide">05810111165029</dd>
-                            </div>
-                            <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-                              <dt className="font-semibold text-slate-700 sm:min-w-[7.5rem]">Account title</dt>
-                              <dd className="text-slate-900">Digital Skills House</dd>
-                            </div>
-                          </dl>
-                        </div>
-                      </div>
-                    </div>
+                {/* Submit — bank details are above (tap to copy) */}
+                <div className="border-t border-gray-100 bg-gradient-to-b from-slate-50 to-white p-6 sm:p-8 md:p-10">
+                  <div className="mx-auto max-w-2xl text-center">
                     <Button
                       type="submit"
                       className="w-full sm:w-auto min-h-[52px] sm:min-h-[56px] px-8 sm:px-12 py-4 text-base sm:text-lg font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:pointer-events-none disabled:opacity-50"
@@ -1530,7 +1567,7 @@ export function AddBusinessForm({
                       )}
                     </Button>
                     <p className="mt-4 text-sm text-gray-600">
-                      Complete all required fields and payment proof to enable submit. We review and publish within 6 hours.
+                      Pay Rs. {LISTING_FEE_PKR}/- above (tap green card to copy bank details), add proof, then submit. We review within 6 hours.
                     </p>
                   </div>
                 </div>
