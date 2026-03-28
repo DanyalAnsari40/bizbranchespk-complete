@@ -7,6 +7,10 @@ export const SITE_URL =
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://bizbranches.pk");
 
 export const SITE_NAME = "BizBranches";
+
+/** Official WhatsApp chat link (support / listings help). */
+export const SITE_WHATSAPP_URL = "https://wa.me/923142552851";
+
 export const SITE_DESCRIPTION =
   "Pakistan's free business listing directory. Find local businesses, add your business free, and connect with customers across Pakistan.";
 

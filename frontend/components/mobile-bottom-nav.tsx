@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useLayoutEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import {
   Home,
   LayoutGrid,
@@ -76,6 +77,11 @@ function NavTab({
 export function MobileBottomNav() {
   const pathname = usePathname()
   const [dirOpen, setDirOpen] = useState(false)
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null)
+
+  useLayoutEffect(() => {
+    setPortalTarget(document.body)
+  }, [])
 
   if (pathname?.startsWith("/admin") || pathname?.startsWith("/control-room")) {
     return null
@@ -85,7 +91,7 @@ export function MobileBottomNav() {
   const isCategories = pathname === "/category" || pathname?.startsWith("/category/")
   const isCities = pathname === "/search" || pathname?.startsWith("/city/")
 
-  return (
+  const content = (
     <>
       <nav
         className="fixed inset-x-0 bottom-0 z-40 md:hidden pointer-events-none"
@@ -178,4 +184,10 @@ export function MobileBottomNav() {
       </Sheet>
     </>
   )
+
+  if (portalTarget) {
+    return createPortal(content, portalTarget)
+  }
+
+  return content
 }
