@@ -98,7 +98,7 @@ export function TopCitiesSection() {
 
   if (loading) {
     return (
-      <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+      <section id="browse-cities" className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-gray-50 to-blue-50 scroll-mt-24">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-8 sm:mb-10 md:mb-12">
             <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-5">
@@ -116,7 +116,7 @@ export function TopCitiesSection() {
     )
   }
   return (
-    <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+    <section id="browse-cities" className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-gray-50 to-blue-50 scroll-mt-24">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-8 sm:mb-10 md:mb-12">
           <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-5">

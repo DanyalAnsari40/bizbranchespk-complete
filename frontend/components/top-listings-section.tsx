@@ -72,7 +72,7 @@ function FeaturedCategoryCard({ categoryName, categorySlug }: FeaturedCategoryCa
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {first ? (
             <div className={`transition-all duration-500 ${anim ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`} key={`b1-${first.id}`}>
-              <ListingCard business={toListingBusiness(first)} variant="mini" />
+              <ListingCard business={toListingBusiness(first)} variant="mini" showPremiumVerified />
             </div>
           ) : (
             <div className="flex items-center justify-center h-48 text-sm text-gray-400 bg-gray-50 rounded-lg">
@@ -81,7 +81,7 @@ function FeaturedCategoryCard({ categoryName, categorySlug }: FeaturedCategoryCa
           )}
           {second && (
             <div className={`transition-all duration-500 ${anim ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`} key={`b2-${second.id}`}>
-              <ListingCard business={toListingBusiness(second)} variant="mini" />
+              <ListingCard business={toListingBusiness(second)} variant="mini" showPremiumVerified />
             </div>
           )}
         </div>
@@ -268,7 +268,12 @@ export function TopListingsSection({ initialRecent = [] }: { initialRecent?: any
                         </div>
                         <div className="grid grid-cols-1 gap-3 sm:gap-4 flex-1">
                           {pair.map((b, pairItemIndex) => (
-                            <ListingCard key={`${String(b.slug ?? b.id)}-${idx}-${pairItemIndex}`} business={toListingBusiness(b)} variant="mini" />
+                            <ListingCard
+                              key={`${String(b.slug ?? b.id)}-${idx}-${pairItemIndex}`}
+                              business={toListingBusiness(b)}
+                              variant="mini"
+                              showPremiumVerified
+                            />
                           ))}
                         </div>
                       </div>

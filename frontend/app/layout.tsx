@@ -8,7 +8,7 @@ import { Footer } from "@/components/footer";
 import { GlobalTopbar } from "@/components/global-topbar";
 import GlobalContainer from "@/components/global-container";
 import { AdBanner } from "@/components/ad-banner";
-import { CtaAddBusiness } from "@/components/cta-add-business";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { CopyDeterrent } from "@/components/copy-deterrent";
 import { Toaster } from "@/components/ui/toaster";
 import { PwaRegister } from "@/components/pwa-register";
@@ -186,7 +186,7 @@ export default function RootLayout({
         </Suspense>
         <GlobalContainer>{children}</GlobalContainer>
         <Footer />
-        <CtaAddBusiness variant="sticky" />
+        <MobileBottomNav />
         <Toaster />
         <PwaRegister />
         <OfflineBanner />

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { MapPin, ExternalLink, Verified } from "lucide-react"
+import { MapPin, ExternalLink, Verified, BadgeCheck } from "lucide-react"
 import { getBusinessLogoUrl } from "@/lib/utils"
 import type { ListingBusiness, ListingCardVariant } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -17,6 +17,8 @@ interface ListingCardProps {
   business: ListingBusiness
   variant?: ListingCardVariant
   className?: string
+  /** Premium blue verified badge (e.g. homepage top listings carousel). */
+  showPremiumVerified?: boolean
 }
 
 /** Normalize API/mock shape to logo URL (supports logoUrl, logo, image). */
@@ -79,7 +81,7 @@ function BusinessLogo({
   )
 }
 
-function ListingCardInner({ business, variant = "compact", className }: ListingCardProps) {
+function ListingCardInner({ business, variant = "compact", className, showPremiumVerified }: ListingCardProps) {
   const href = `/${business.slug || business.id}`
   const ariaLabel = `View details for ${business.name}`
 
@@ -135,6 +137,15 @@ function ListingCardInner({ business, variant = "compact", className }: ListingC
       <Link href={href} className={cn(CARD_LINK_CLASS, "block group h-full", className)} aria-label={ariaLabel}>
         <div className="h-full overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all duration-200 group-hover:border-primary/20">
           <div className="relative h-44 overflow-hidden bg-gradient-to-br from-primary/5 via-purple-50/60 to-pink-50/50">
+            {showPremiumVerified && (
+              <div
+                className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-full border border-sky-200/80 bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white shadow-md ring-2 ring-white/90 sm:text-[9px]"
+                title="Verified listing"
+              >
+                <BadgeCheck className="h-3 w-3 shrink-0 text-white sm:h-3.5 sm:w-3.5" strokeWidth={2.5} aria-hidden />
+                <span className="pr-0.5">Verified</span>
+              </div>
+            )}
             {/* Logo badge: make logos feel bigger + consistent (circle). */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white/95 backdrop-blur-sm shadow-lg ring-2 ring-primary/10 border border-gray-200 overflow-hidden">
