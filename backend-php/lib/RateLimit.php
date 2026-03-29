@@ -28,9 +28,9 @@ class RateLimit {
             )->execute([$ip, $path]);
 
             return ['ok' => true];
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Logger::error('Rate limit check failed:', $e->getMessage());
-            return ['ok' => true]; // fail open
+            return ['ok' => true]; // fail open (e.g. DB not migrated yet on localhost)
         }
     }
 

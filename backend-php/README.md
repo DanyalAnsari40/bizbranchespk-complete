@@ -10,6 +10,12 @@ PHP + MySQL API for the BizBranches directory. Serves `/api/*` for the Next.js f
 
 ## Setup
 
+From the **repository root**, you can create `backend-php/.env` from the local template (same values as below):
+
+```bash
+npm run setup:local
+```
+
 ### 1. Install dependencies
 
 ```bash
@@ -21,6 +27,7 @@ composer install
 
 ```bash
 cp .env.example .env
+# Or use env.local.template → .env via npm run setup:local from repo root
 # Edit .env: DB_HOST, DB_NAME, DB_USER, DB_PASS, CLOUDINARY_*, SMTP_*, etc.
 ```
 

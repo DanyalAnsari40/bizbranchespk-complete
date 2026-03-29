@@ -4,6 +4,7 @@
   "private": true,
   "description": "BizBranches - Next.js frontend + PHP backend (MySQL)",
   "scripts": {
+    "setup:local": "node scripts/setup-local.cjs",
     "dev": "concurrently \"npm run start:backend-php\" \"npm run dev:frontend\"",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "npm install && cd frontend && npm install && npm run build",
