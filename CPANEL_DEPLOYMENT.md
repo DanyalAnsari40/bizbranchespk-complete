@@ -22,7 +22,7 @@ public_html/
 ├── city/              ← City pages (static)
 ├── *.html             ← Other static pages
 ├── public/            ← Images, manifest, robots.txt (if copied)
-└── api/               ← PHP backend (deployed by CI/CD)
+└── api/               ← PHP backend (upload manually)
     ├── .htaccess
     ├── .env            ← Create manually!
     ├── index.php
@@ -79,30 +79,40 @@ NEXT_PUBLIC_SITE_URL=https://bizbranches.pk
 
 ---
 
-## Step 2: GitHub Secrets
+## Step 2: Build on your machine
 
-Go to: **GitHub repo > Settings > Secrets and variables > Actions**
+1. **Frontend env** — In `frontend/`, create `.env.local` (variables are documented in the repo root `.env.example`) with your live domain, for example:
+   - `NEXT_PUBLIC_BACKEND_URL=https://bizbranches.pk`
+   - `BACKEND_URL=https://bizbranches.pk`
+   - `NEXT_PUBLIC_SITE_URL=https://bizbranches.pk`
+   - `NEXT_PUBLIC_STATIC_EXPORT=true`
+   - `NODE_ENV=production`  
+   Add Cloudinary and any other keys your build needs.
 
-| Secret | Value |
-|---|---|
-| `FTP_SERVER` | `ftp.bizbranches.pk` |
-| `FTP_USERNAME` | Your cPanel FTP username |
-| `FTP_PASSWORD` | Your cPanel FTP password |
-| `FTP_DEPLOY_DIR` | `/home/bizbranchespk/public_html/` |
-| `SITE_URL` | `https://bizbranches.pk` |
-| `CLOUDINARY_CLOUD_NAME` | Your Cloudinary cloud name |
+2. **Install and build** from the **repository root**:
+   ```bash
+   npm run build
+   ```
 
-**Important**: `FTP_DEPLOY_DIR` must end with `/` and be the full server path to `public_html`.
+3. **Apache rules for static output** — After the build, copy the root file `cpanel-htaccess` to `frontend/out/.htaccess` (overwrite if needed).
+
+4. **PHP dependencies**:
+   ```bash
+   cd backend-php
+   composer install --no-dev --optimize-autoloader
+   ```
 
 ---
 
-## Step 3: Deploy
+## Step 3: Upload (zip or File Manager / FTP)
 
-Push to `main` branch → GitHub Actions automatically:
-1. Builds Next.js → uploads to `public_html/`
-2. Installs Composer deps → uploads PHP to `public_html/api/`
+There is **no** GitHub Actions deploy; upload artifacts yourself.
 
-Or trigger manually: **GitHub > Actions > Run workflow**
+1. **Frontend** — Upload the **contents** of `frontend/out/` into `public_html/` (same level as `index.html`, `_next/`, etc.). Keep your existing `public_html/api/` folder and its `.env`; do not delete the API when refreshing the site files.
+
+2. **Backend** — Upload the **contents** of `backend-php/` (including `vendor/` from Composer) into `public_html/api/`. **Do not** replace a production `api/.env` with a template from the repo; edit `.env` only on the server if needed.
+
+3. Optional: zip `frontend/out` and `backend-php` (with `vendor`) separately for cPanel **File Manager → Extract**, then move files into `public_html` and `public_html/api` as above.
 
 ---
 
@@ -130,23 +140,13 @@ If migrating from another source, import data directly into MySQL via phpMyAdmin
 
 ## Troubleshooting
 
-### GitHub Action not running or deployment fails
+### Manual deploy issues
 
-1. **Action never runs**
-   - Push is on the **main** branch (workflow triggers on `push` to `main`).
-   - Or run it manually: **Actions** tab → **Deploy to cPanel via FTP** → **Run workflow** → **Run workflow**.
+1. **Blank or wrong site after upload** — Confirm `frontend/out/.htaccess` was copied from `cpanel-htaccess` before zipping/uploading.
 
-2. **"Check required secrets" fails**
-   - Go to **Settings** → **Secrets and variables** → **Actions**.
-   - Add: **FTP_SERVER**, **FTP_USERNAME**, **FTP_PASSWORD** (required).
-   - Optional: **FTP_DEPLOY_DIR** (e.g. `/home/cpaneluser/public_html/`), **SITE_URL**, **CLOUDINARY_CLOUD_NAME**.
+2. **Build fails locally** — Fix errors from `npm run build` (missing `frontend/.env.local`, TypeScript, or network during build). The static export does not need the PHP server running for every page, but some builds may call the API; use the correct `BACKEND_URL` if required.
 
-3. **FTP deploy step fails**
-   - Check **FTP_SERVER**: use the hostname (e.g. `ftp.bizbranches.pk` or your host’s FTP server).
-   - **FTP_DEPLOY_DIR**: for cPanel it’s usually the full path to the folder that should contain the site, e.g. `/home/your_cpanel_username/public_html/` (trailing slash). If you leave it empty, the workflow uses `public_html/` (relative to your FTP user’s home).
-
-4. **Build fails**
-   - See the **Build Next.js** step log. Fix any errors (e.g. missing env, API unreachable) and push again.
+3. **API 500 after upload** — Run `composer install` on the copy you upload; check `public_html/api/.env` and file permissions.
 
 ---
 
@@ -157,13 +157,8 @@ The domain document root is pointing at the **API folder** instead of the folder
 1. **Set document root to the folder that has the static site**  
    In **cPanel > Domains** (or **Subdomains**), edit `bizbranches.pk` and set **Document Root** to the directory that contains **both** `index.html` and `.htaccess` (frontend) **and** the `api/` subfolder. Example: `public_html` — **not** `public_html/api`.
 
-2. **Add GitHub Secrets**  
-   **Settings > Secrets > Actions**:  
-   - `FTP_DEPLOY_DIR` = that folder’s full path, e.g. `/home/bizbranchespk/public_html/` (end with `/`).  
-   - `SITE_URL` = `https://bizbranches.pk`
-
-3. **Redeploy**  
-   Push to `main` or run the **Deploy to cPanel via FTP** workflow. The workflow deploys the backend first, then builds the static site (calling your API for slugs) and uploads the `out/` contents to the root.
+2. **Re-upload the static site**  
+   Rebuild with `npm run build`, copy `cpanel-htaccess` → `frontend/out/.htaccess`, then upload `frontend/out/` contents to the correct document root (same folder that contains `api/`).
 
 ---
 
